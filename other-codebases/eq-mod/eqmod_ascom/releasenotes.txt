@@ -1,0 +1,817 @@
+EQASCOM_V1.27i
+	Additional "External" option on ST-4 guiding rates - if selected then the guide rate is set externally (i.e. via synscan) and will not initialisied by EQASCOM.
+
+EQASCOM_V1.27h
+	Fix to Mosaic exe assignment - file filter wasn't set correctly and so eqmosiac disn't appear listed.
+
+
+EQASCOM_V1.27g
+	Custom Tracking: Data set is filtered to only load the next 24 hours of data from the file 
+	if, once tracking no current data is found the next 24 hours is loaded automatically.
+	Fix to ASCOM 'pointing' PierSide reporting - not that the EQASCOM UI displays physical pierside which is different.
+
+EQASCOM_V1.27f
+	Custom tracking: support for JPL Horizons fractional seconds
+
+EQASCOM_V1.27e
+	Custom tracking parsing of JPL Horizons data
+	Custom tracking automatic waypoint correction gotos added.
+
+EQASCOM_V1.27d
+	Custom Tracking file can now disable precession on gotos
+	Custom track gotos now calculated for "mid record" positions - previously gotos were to the nearest tracking record.
+	Bug fix the prevented custom track tooltip form being assigned at startup.
+
+EQASCOM_V1.27c
+	Ephemeris based custom tracking promoted to standard feature (as opposed to advanced)
+	Goto implementeded for custom track objects (right click on tracking button)
+	Indication given id Ephemeris data is out of date.
+	Message center output provided for ephemeric format/load errors.
+	
+EQASCOM_V1.27b
+	Fix to southern hemisphere file based tracking. (RA direction was reversed)
+
+EQASCOM_V1.27a
+	Change so encoders are immediately preset when stating in a parked state - thereby reporting the parked position
+	Dual speed joystick slewing option
+	Fix to custom tracking file format parsing.
+
+EQASCOM_V1.26g
+	Second instance of EQASCOM now optionally installed
+	VBScripts for second instance nodified
+	Toolbox changes to support second instance
+	EQASCOM_Run modified for 2nd instance support
+	File driven Custom Tracking added.
+
+EQASCOM_V126f
+	gamepad polling kept alive to recover "failed" gamepads without need of refresh button
+
+EQASCOM_V126e
+	File load/save dialog now shows hidden folders.
+	PEC fix - the "debug" AutoAdjust was active by default.
+
+EQASCOM_V126d
+	PEC interface re-worked with new setup screen for PEC playback and Capture
+	Screen position bug fix (where right hand screen is primary screen)
+	Language handling for new PEC interface.
+
+EQASCOM_V126c
+	AutoPEC
+	   PEC gain set to 1 and PEC Phase shift set to 0 on AutoPec capture completion
+	   PECapture_EQMOD.txt file now logs the raw PE not the smoothed.
+	   PEC.txt and PECapture_EQMOD.txt now written to program files/EQMOD_PEC directory for easy user access
+
+EQASCOM_V126b
+	PEC Capture low pass and magnitude filter limits read from ini file
+	PEC capture data invert option added to ini file.
+
+EQASCOM_V126a
+	Fix to range checking of dec backlash - values over 100 were reset to zero on startup.
+	PEC capture routing added - investigation in progress.
+	ASCOM EQuatorialCoordinate property can now be set via setup screen to “force” clients to use a particular epoch (but not all clients may play ball!)
+
+EQASCOM_V125d
+    Fixed Rate gotos now retry if initial goto doesn't get to within 0.75 degrees.
+    Fixes to simulator - didn't clear encoder increments on slew to target completion if previously set to track.
+    Fix to PEC sync normalisation.
+
+EQASCOM_V125c
+    Support added for GPS NMEA ZDA message (time & date).
+
+EQASCOM_V125b
+    Last GPS baud rate in the dropdown now comes from ini file so user can override to their own custom rates.
+    Fix to park timer which would unpark the mount if while active it detected the mount was currently parked.
+
+EQASCOM_V125a
+    Guiding type now set via setup screen.
+    Main interface only displays guiding params for the guiding type being used.
+    Guide rates can now be written via ASCOM for both ST-4 and Pulseguiding.
+
+
+---------------------------------------------------------------------------------
+| Current Sourceforge release                                                   |
+---------------------------------------------------------------------------------
+EQASCOM_V124g
+    Screen position remembered.
+---------------------------------------------------------------------------------
+
+EQASCOM_V124f
+    Fix to Southern Hemisphere alignment editor plot.
+    Sigma Octans added to pole star list.
+    Fix to EQTOUR/EQMOSAIC launcher when no files defined.
+
+EQASCOM_V124e
+    Fix to Meridian limits - if cleared defaults were applied on restart.
+
+EQASCOM_V124d
+    Fix to proximity limit initialisation
+    Removal of code that restricts mount characteristics to previously “known” synta types.
+
+EQASCOM_V124c
+    Setup Option to allow ASCOM clients to change site settings.
+    Bug fix to handle exception when changing active screen whilst maximised.
+
+EQASCOM_V124b
+    Correction to polar scope precession view
+    New slew controls only display mode.
+
+EQASCOM_V124a
+    Option to show Polaris precession added to polar scope tool.
+    Ra/Dec reverse sound assignments
+    Park timer added.
+    Change to Side of Pier calculations in line with ASCOM's latest documentation
+
+
+EQASCOM_V123t
+    fix to move axis in southern hemisphere (where rate change is small!)
+    Updated custom mount definitions to include more belt drive mods.
+
+
+EQASCOM_V123s
+    Sound definitions added for Game pad lock and monitor toggle.
+    Emergency stop given precedence when game pad lock on.
+
+
+EQASCOM_V123r
+    Fix to parking from easterly position when using custom go to speeds (mount didn't stop at park position)
+
+
+EQASCOM_V123q
+    Range checking on site coords - error prompt displayed if out of range.
+    Screen saver/monitor power toggle button added to gamepad control
+    Gamepad lock toggle button added to gamepad control
+
+
+EQASCOM_V123p
+    Further Bug fix associated with V1.23n changes.
+
+
+EQASCOM_V123n
+    Bug fix for EQ3, EQ5 upgrade mounts (introduced with V1.23k). Meridian position was being assigned EQ6Pro/HEQ5 defaults.
+
+
+EQASCOM_V123m
+    Change to app launching (EQTOUR, EQMOSAIC, TonighSky) to allow restoration form a minimised state.
+    Fix to flipped goto when flipping from a counterweights up position with limits off (was using limit position rather then horizontal as RA pivot point)
+    Popup menu to change display
+
+
+EQASCOM_V123k
+    Change to safe goto's when limits are on - if moving from an out of limit position the goto with first move to the limit position in RA only before completing the move to target (previously moves were made via home position).
+
+
+EQASCOM_V123j
+    Change to “safe” gotos when limits are off and moving from a CW up position - slews/parks are routed via median position rather than home position.
+
+
+EQASCOM_V123i
+    Listbox added to Setup form slew preset definition. Bug fix to exception caused when undefined rate is applied.
+
+
+EQASCOM_V123h
+    Choice of pole stars now offered via drop down list
+    Setting of Polarscope home position now prompts for confirmation.
+    Bug fix to prevent POV buttons from closing alignment dialogue.
+
+
+EQASCOM_V123g
+    More fixes to southern hemisphere polar scope alignment.
+
+
+EQASCOM_V123f
+    Fix to “crash” if rate preset selected via gamepad button is greater than the number of presets currently defined.
+    Updated Romainian translation dll
+    Manual Sync script added to install
+    Read of GuideRates via ASCOM now supported (for pulse guide).
+    Changes to polar scope alignment to handle southern hemisphere use.
+
+
+EQASCOM_V123e
+    Fix to bug in “safe slew” code that change home park position.
+    Extra error handling in setup dialog
+    Gamepad Monitor app now allows manual selection if more than one gamepad is installed.
+    Updated Dutch translation dll
+
+
+EQASCOM_V123d
+    Fix to ensure multi part slews are aborted when parking
+    Fix to ensure parks are only ever initiated if the mount is unparked - exception is park to current which can interrupt a parking mount.
+    Fix to ensure unparks are only ever initiated if the mount is parked.
+    Fix to ensure Flipped goto state/checkbox is cleared on park (for the case where a goto doesn't complete).
+    Fix to update the Park status display on emergency stop (previously mount would park but no indication was given)
+    Fix to RA Limit ini file initialisation. If RA limits were not defined (i.e. first use) the EAST and WEST limit were written with the same default value. Now correct defaults are assigned.
+    Number of parks/unparks uncreased to 10
+    Change to prevent undefined parks or unparks from being selected.
+    Flashing Limit display now indicates which type of limits are triggered (Horizon or Meridian).
+    Meridian limits suppressed during CW up type slews.
+
+
+EQMOD_ASCOM_V123c
+    Parked status now flashes in the main coordinate area when parked.
+    Emergency Stop (slew controls and Gamepad) now performs a park to current. (tracking stop just stops motors)
+    Park from CW up positions now always implemented as a RA slew to the RA home followed by a slew in declination only to Park declination followed by a final slew in RA to the PARK RA.
+    Slews from CW up positions with limits off now always implemented as a slew in RA to the RA home followed by a slew in declination only to target declination followed by a final iterative slew in RA to the target RA.
+    Fix to AutoRASync ini file initialisation - previously defaulted to off rather than on for clean installs
+    Position dials added to Park/Unpark definition dialog allowing the user to verify the current definitions.
+    Toolbox:- View ini file added.
+
+
+EQMOD_ASCOM_V123b
+    Fix to sync too big bug which whilst rejecting the sync would apply it as a fixed offset.
+    Slews to CW up targets now always implemented as a slew in RA to the RA home followed by a slew in declination only to target declination followed by a final iterative slew in RA to the target RA.
+    Fix to custom tracking for southern hemisphere RA track rates - previously RA axis motion was reversed requiring the entry of “negative” rates.
+    Fix for EQ5 type bug (invalid stepcount error) introduced with previous version.
+    Fix to bug that reset alignment preset name on point append.
+
+
+EQMOD_ASCOM_V123a
+    Graphical display of RA limits on main UI and limits editor
+    Addition of one shot Counter Weights Up goto - allows a forced flip provided the end position is within defined limits.
+    Dead Man's Switch added as a gamepad option. Releasing whilst slewing will immediately park the mount to the current position.
+
+
+EQMOD_ASCOM_V122j
+    Updated French dll/Updated Italian
+    Toolbox fix - allow disconnect on connection fail.
+    PEC fix - switched to wrong display on PEC load
+    Polar Scope home - start position (clock position) now saved along with mount position
+    EQASCOM_RUN - now starts in system tray
+    Gamepad monitor added to install
+    GPS NMEA trace added - right click on GPS data frame to show left click to hide.
+
+
+EQMOD_ASCOM_V122i
+    Setup Form and Custom Mount translation support (extra strings added)
+    Updated Dutch dll
+
+
+EQMOD_ASCOM_V122h
+    Simulator form, minimise added. Now starts minimised latitude and longitude site details now has seconds entry box.
+    New COM interface added to allow reading of the dec axis position (0-360 degrees rather than 0+-90)
+
+
+EQMOD_ASCOM_V122g
+    Save Alignment Points to Preset on APPEND option added.
+
+
+EQMOD_ASCOM_V122f
+    Further changes to simulator display.
+    Axis position dials added to main display.
+
+
+EQMOD_ASCOM_V122e
+    Fix to simulator RA display.
+    Goto screen (right click on the main display RA/DEC coords) now provides a bookmarked positions list replacing the previous single bookmark.
+
+
+EQMOD_ASCOM_V122d
+    Fix to custom rate calculations for EQ5 type mounts.
+
+
+EQMOD_ASCOM_V122c
+    Backlash range increased upto 200ms max
+    Mount param debug.
+
+
+EQMOD_ASCOM_V122b
+    Slew rate Limit dropdown replaced with slider control.
+
+
+EQMOD_ASCOM_V122a
+    Fix to solar and lunar “sound” labels
+    Fix to Italian language translation that affected joystick config parsing
+    Ability to override language to English (setup screen)
+    Update checking and notification.
+
+
+EQMOD_ASCOM_V121e
+    Max slew rate feature introduced (requires evaluation)
+    Ability to increase windows process priority
+
+
+EQMOD_ASCOM_V121d
+    Clear sync, Define Park and Resynch encoder text buttons replaced with graphics
+    Italian language dll
+
+
+EQMOD_ASCOM_V121c
+    Graphical button backgrounds set to icon background colour.
+    ASCOM option for synchronous parking - May be important if your client application expects
+    EQASCOM to “block” until the mount is parked (ASCOM standard method).
+    Initialisation errors are now displayed on the main mount status display.
+    Points List, Clear Alignment and Add Point buttons replaced with graphical buttons.
+    Rate changes can now be made on the fly whilst manually slewing.
+
+
+EQMOD_ASCOM_V121b
+    current Sitename now stored in ini file
+    eqascom_run - error handling improved and polling suspended during shutdown prompt.
+    Fix to custom mount RA/DEC dropdown initialisation.
+
+
+EQMOD_ASCOM_V121a
+   Custom Mount tracking offset added to ini file - allows users to apply a larger offset than is available via drift compensation.
+   Custom mount setup dialog added (accessed from button on setup screen)
+   Graphical buttons replacing text - cleaner interface
+   Gamepad setup accessible from setup screen.
+   Toolbox ini file move between simulator and EQASCOM
+   GPS option added to setup screen.
+   Site presets added to setup screen.
+
+
+EQMOD_ASCOM_V120k
+   Fix to PC beep on rate preset change (long beep on max/min preset had been lost)
+
+
+EQMOD_ASCOM_V120j
+   Message and ASCOM file logs now use a two file approach to prevent massive logs. Each file contains 2000 logs.
+   New and updated language dlls.
+
+EQMOD_ASCOM_V120i
+	Declination backlash compensation for pulse guide.
+
+EQMOD_ASCOM_V120h
+	ASCOM PulseGuide command now will have no effect on E/W directions if not tracking. Previously there was a bug that meant the requested pulse never completed.
+
+EQMOD_ASCOM_V120g
+	3 o'clock and 9 o'clock starting positions added to polar alignment.
+	Gamepad button assignment option added for Polar Scope alignment
+	Alignment sounds (Accept, Cancel End)
+	Polar Scope Alignment sounds.
+
+EQMOD_ASCOM_V120f
+	Goto initiation sound option.
+	fix to align dialog slew button layout.
+	Optimisation of goto handling.
+
+EQMOD_ASCOM_V120e
+	More sounds (tracking and unpark).
+	PoleStar Hour Angle no uses J2000 coords and applies precession.
+
+EQMOD_ASCOM_V120d
+	Greater sound control for folks who like to have their mount's speak to them.
+
+EQMOD_ASCOM_V120c
+	Minor fix to slew resolution ini default , V1.20b set this to 0 by mistake. V1.20c will automatically fix existing ini files to the correct default of 10.
+
+EQMOD_ASCOM_V120b
+	“Advanced” checkbox added to setup form - When checked various “advanced controls on the EQASCOM UI are made visible
+	Auto RA sync is now only displayed when operating in “advanced mode”
+	New option for 3-star “Closest Points” or “Best Center” This is an advanced feature.
+	New “point filter” dropdown - “All”, “PierSide Only” and “Local Quadrant”
+	Number of Slew iterations is now read from the ini file.
+	Slew termination resolution no read from ini file
+	Pulseguide enable / disable via ASCOM commandstring.
+	Fix to manual Horizon entry.
+
+EQMOD_ASCOM_V120a
+	Improvement to Alignment pierside implementation.
+	Minor improvements to alignment map display.
+
+EQMOD_ASCOM_V119g
+	Change to slew release code to put back to V119a state - some problems reported with sidereal not restarting.
+
+EQMOD_ASCOM_V119f
+	Fix to simulator - was terminating slews early due to rA tracking stopping DEC motor.
+	Store and Recall functions added to goto form.
+
+EQMOD_ASCOM_V119e
+	Fix gamepad slew south - didn't work when assigned to button rather than POV.
+
+EQMOD_ASCOM_V119d
+	Goto form placed “on top” when opened.
+	Search option added to setup form to auto-detect com port (when connected to mount).
+
+EQMOD_ASCOM_V119c
+	Optimisation of slew release for sub-sidereal speeds.
+
+EQMOD_ASCOM_V119b
+	Icons added to dialogs
+	Bug fix to drift compensation value which was reset if comms failure stopped EQASCOM initialising
+	Fix to slews (southern hemisphere and sub-sidereal)
+	Addition to game pad configuration to allow the device to be explicitly selected rather than using automatic detection.
+	Preparatory work for wider mount support.
+
+EQMOD_ASCOM_V119a
+	New “proximity range” parameter as part of N-Point Alignment. Existing points within range of a new point are automatically removed from the points list.
+	Slew Rates now include pulse guide rates for sub sidereal rate movement.
+	Setup form not includes ability to define Slew preset rates
+	Fix to E, NE and SE slews when at x1 rate.
+
+EQMOD_ASCOM_V118m
+	Fix to sync handling and POV controls (POV buttons were initiating syncs)
+	Goto function added (right click RA/DEC display)
+
+EQMOD_ASCOM_V118l
+	Fix to Westward slew commands when reversed.
+	Fix to allows NW and SW slews to take into account tracking.
+
+EQMOD_ASCOM_V118k
+	POV disable option now applies during game pad configuration.
+
+EQMOD_ASCOM_V118j
+	Slew pad rates linked to main interface rate sliders - so if main sliders change so do slew pad rates.
+
+EQMOD_ASCOM_V118i
+	Pulseguide logging always active.
+	Bug fix to POV handling
+
+EQMOD_ASCOM_V118h
+	Slew pad keyboard handling. Rate preset change via + and -, *=spiral search.
+	Game pad handling - POV (D-PAD) buttons now capable of individual assignment
+	Pulse guide monitors now wrap around - cursor added to show current position.
+	Fix to limit detection during slews (limits were always applied regardless of the limit on slew option)
+
+EQMOD_ASCOM_V118g
+	Minor change to point transformation map display of mount position.
+	CommandString interfaces added for reading and writing PulseGuide rates
+	CommandString interfaces added for reading and writing ST4 Guide rates
+	Exception handling improvements to GPS serial communications (may help will dodgy drivers!).
+
+EQMOD_ASCOM_V118f
+	Fix to points list delete (would delete even if list was empty)
+	Wider range of GPS baud rates supported
+	Re-write of command string parsing
+
+EQMOD_ASCOM_V118e
+	Goto Star hidden from Point editor (button and menu)
+	Code speed efficiency improved on alignment list searches
+	Fix to reading of ASCOM RightAscensionRate property.
+
+EQMOD_ASCOM_V118d
+	Key handling for points list selection changes
+	ini file handling - bug fix to handle very large ini files.
+	Transformation map now “draws as it goes” so folks can see the progress (important for large points lists)
+	
+EQMOD_ASCOM_V118c
+	Points editor now automatically refreshes list if alignment point count changes.
+	Points editor is sizable
+
+EQMOD_ASCOM_V118b
+	Time to Meridian limit added
+	Rework of points list display to use tabs
+	alignment map moved to Points Editor - many improvements
+
+EQMOD_ASCOM_V118a
+
+	Alignment Save now crops data to alignment point count. Previously “unused” entries could remain in the ini file (they caused no harm, but were confusing)
+	Park status is now written to the ini whenever the mount unparks. Previously “unparks” were only written on closure which meant that in event of a PC crash the an “unparked” mount could appear as parked on subsequent restart (thereby loosing PEC sync).
+	Sync button added to game pad handling
+	Rework to provide support for early binding.
+
+EQMOD_ASCOM_V117f
+	Bug fix to ASCOM Pulseguide enable - was associated with exception disable state.
+
+EQMOD_ASCOM_V117e
+	Simulator fixes & improvements
+	Custom rate - rates up to 12000 arc secs / sec allowed.
+	Fixes to on the fly rate change behaviour - motors were stopping if moving from slow to fast rates.
+	Log message center to file.
+	Option to disable ASCOM exceptions.
+	This version was withdrawn and replaced with v117f
+
+EQMOD_ASCOM_V117d
+	Fix to loading of custom mount parameters
+
+EQMOD_ASCOM_V117c
+	Resynch Encoders button added.
+	EQASCOM_toolbox included in the install
+	
+EQMOD_ASCOM_V117b
+	Fix to simulator read of motor positions - wrap arounds were not simulated and out of range values were returned.
+
+EQMOD_ASCOM_V117a
+	Correction of default used for Polaris RA.
+	POV disable option added to allow ASCOMPAD to control focuser using those buttons.
+	Affine Taki+Polar checkbox hidden
+	Alignment process simplified.
+
+EQMOD_ASCOM_V116k
+	New ASCOM interfaces to initiate the various park/unpark modes
+	Fix to button decoding when using Spanish/Dutch land dlls
+	Disabling of Polar Alignment measurement pending completion - enable ini file (POLAR_ALIGNMENT=1)
+	Fix to store N-Point Alignment mode (nearest didn't previously save)
+	Preparatory work for goto slew rate option - not active yet though.
+	PEC debug options slightly modified.
+	Fix to simulator sidereal rate.
+	Optional GPS initializer string (via ini file key GPS_INITSTRING)
+	Alternate 12 o'clock start position for polarscope alignment.
+	N- Point alignment option removed from user interface (N-Point+nearest is better)
+
+EQMOD_ASCOM_V116j
+	Sound config options added. WAVfile alternative to beep.
+
+EQMOD_ASCOM_BETA_V116i
+	Puleguide ignored if slewing
+	Simulator - replaced pie charts to remove need for mschrt20.ocx
+	Simulator - initializes to use EQASCOM site coords.
+	Fix to ini Meridian Flip ini reads (didn't work for non English locales)
+
+EQMOD_ASCOM_BETA_V116h
+	Fix to edit of park/unpark position name.
+
+EQMOD_ASCOM_BETA_V116g
+	Fix to limits - limit on slew status not saved to ini
+	Fix to W slew (if tracking rate=rate+1 to compensate for sidereal motion)
+	Number of definable park and unpark position increased to 5
+	Fix so alignment save on park never writes empty alignment lists
+
+EQMOD_ASCOM_BETA_V116f
+	Fix to support PECPHASE, PECGAIN reads
+	Fix to PEC phase slider change.
+	Addition of PECFILE interface.
+
+EQMOD_ASCOM_BETA_V116e
+	Main form height reduced slightly
+	Fix to PECSET
+
+EQMOD_ASCOM_BETA_V116d
+	Fix to PEC Export
+
+EQMOD_ASCOM_BETA_V116c
+	Align polarscope home position definition and goto functions added.
+	Fix to PEC
+
+EQMOD_ASCOM_BETA_V116b
+	Align polarscope function added.
+
+EQMOD_ASCOM_BETA_V116a
+	ASCOM CommandString Interface to support PEC Phase, PEC Gain
+	ASCOM COmmandString change so the enabling/disabling PEC also starts/stops tracking
+	ASCOM CommandString Interface to support MOUNTVER, DRIVRVER and DLLVER
+	Go faster N-point calculations.
+	Max stars used in N-Point calc read from ini file
+	Resizeable polarscope view
+
+EQMOD_ASCOM_BETA_V115h
+	Custom mount support - test release
+	PEC restructure.
+
+EQMOD_ASCOM_BETA_V115f
+	Alignment preset index saved on preset load and save (previously only saved on form closure).
+	Com port string prefix added for com10+ support
+
+EQMOD_ASCOM_BETA_V115d
+	Setup form forced to top.
+
+EQMOD_ASCOM_BETA_V115c
+	Manual guiding via slew controls using pulseguide movements
+
+EQMOD_ASCOM_BETA_V115b
+	.txt extension forced for limit file saves
+	ASCOM error messages corrected.
+
+EQMOD_ASCOM_BETA_V115a
+	Automatic pier flip option added.
+	Park to current no longer redefines the user defined park.
+
+EQMOD_ASCOM_BETA_V114g
+	Fix to bug preventing Tour launch.
+	Bug fix to Alignment save / load (wouldn't let you select both options)
+	Bug fix to pulseguide enable defaults
+
+EQMOD_ASCOM_BETA_V114f
+	Encoder timer changed to be more tolerant of communications failures. On failure the emulated RA and last known 	DEC positions are used. An emergency stop is tried after five successive failures.
+
+EQMOD_ASCOM_BETA_V114e
+	Bug fix: moveaxis - RA and DEC axis prescaler was left a default “1” if rate was negative.
+	Bug fix: If park state was “parking” joystick controls were still active.
+	Bug Fix: Alt and Az labels swapped in Horizon Editor listbox.
+	Bug Fix: Limit file reference now cleared when horizon is cleared.
+	Bug Fix: Horizon editor checkbox not initialised on form load.
+
+EQMOD_ASCOM_BETA_V114d
+	Horizon editor added
+	ASCOM Pulseguide can be disabled if need,
+
+EQMOD_ASCOM_BETA_V114C
+	Log to file added to ASCOM trace
+	PEC now automatically applied to sidereal tracking.
+	RA & DEc included in PEC timestamp
+	Fix:- ASCOM interface now only returns status as parked when scope reaches park position - previously it would report parked whilst the mount was still parking.
+	Fix: ASCOM AbortSlew. Slew aborts only applied if already slewing. On abort completion tracking is returned to pre-slew rate.
+	Self installer added.
+
+EQMOD_ASCOM_BETA_V114b
+	ASCOM trace added (double click ASCOM logo)
+	EQTour & EQMOSAIC launch now writes ASCOM driver ID to their ini files.
+	Option for full ASCOM compliance - No slews unless tracking is set (default to non compliant to work with CDC, HNSKY, Stellarium)
+	PEC ASCOM interface added via CommandString.
+	Alignment preset load, bug fix to allow for internationalisation (decimal separator)
+
+EQMOD_ASCOM_BETA_V114a
+	Joystick calibration
+	Joystick disable option via ini file
+	ASCOM DestinationPierSider support
+	AS0COM tracking - tracking rate offsets applied whenever tracking started.
+	ASCOM Park check and error reporting for MoveAxis, tracking etc. - greater level of conformance PEC extra error handling and debug output
+
+EQMOD_ASCOM_BETA_V113t
+	Support for ASCOM Rates collection
+	EQMOD_ASCOM_BETA_V113s
+	Option to load alignment from preset on unpark
+	Option to save alignment to preset on park
+	Right click added to Tour/Mosaic buttons to set exe path.
+	Tooltips added for Mosaic & Tour buttons
+	PoleStar Hour angle display added.
+	File name now displayed as part of PEC status frame title
+	Updated Spanish dll
+
+EQMOD_ASCOM_BETA_V113r
+	Fix to EQ5 & EQ3 steps per worm rev calculation
+
+EQMOD_ASCOM_BETA_V113p
+	ASCOM PierSide read support added.
+
+EQMOD_ASCOM_BETA_V113p
+	N-point 3-Point Center Point, Sync Append as N-point
+
+EQMOD_ASCOM_BETA_V1130
+	Modified N-point (ALT/AZ Coordinate Transformation)
+
+EQMOD_ASCOM_V113n
+	Additional error checking to Tour/Mosaic quick launch.
+	Form resize of Joystick config form (left bigger than it need be in a previous release)
+
+EQMOD_ASCOM_BETA_V113m
+	Addition of EQMosaic and EQTour quick launch buttons.
+	Spiral button replaced with graphical button.
+	Park/Unpark button now takes caption text from appropriate park/unpark drop down.
+	Spanish dll updated.
+	Polar Alignment tool - Initial framework included for evaluation.
+
+EQMOD_ASCOM_BETA_V113L
+	Park status saved on DCOM termination, ASCOM disconnection and on PARK slew completion
+	Mount status now shows “PARKING…” and “PARKED” when slew is complete.
+	PulseGuide Monitor moved to one of the cyclic status displays. Individual zoom for RA and DEC axis.
+
+EQMOD_ASCOM_BETA_V113k
+	Park/Unpark operation:
+	Individual Park buttons replaced with drop-downs list to select behaviour and single Park/Unpark button to action.
+	ASCOM Pulseguide Monitor:
+	Available via double click on ASCOM PulseGuiding frame.
+	Pulseguide corrections are plotted across a time axis with the height/amplitude of the wave determined by the duration value being passed to the eqmod driver.
+	Here you can easily visualize the characteristics of the corrections being sent to the mount. Sample of them would be oscillations or correction overshoots, undershoots (less aggressive) and no correction at all. The graph changes real time depending on the type of modifications made to the guiding parameters.
+	RA and DEC Correction Pulsewidth gain:
+	A 100% gain setting means EQMOD will apply “as is” the correction duration value as provided by the client autoguiding software. Anything below 100 will force EQMOD to reduce the correction duration as a “percentage” of what the autoguiding software has submitted. That is for example a “75%” gain setting would convert a 100 millisecond correction to 75 milliseconds.
+	Motor Position Emulation:
+	EQMOD ASCOM now emulates the values in between the 200ms AutoRA
+	Sync sample. Previously clients requesting either motor position or RA/DEC coordinates may have read values up to 200ms out of date. New 'emulated' values are now calculated on request.
+
+EQMOD_ASCOM_BETA_V113j
+	PEC: PE correction rates are now pre-calculated to ensure minimum drift remained caused by the quantisation of ideal rate into those the mount can recognise. Any drift induced by PEC can be assessed by using the EQMOD_RA_DRIFT_METER application with PEC running and noting any net gain over a multi cycle period (there will be cyclical drift due to the correction process).
+	The PEC playback is now automatically resynchronised to the current motor position and so the [r00esynch] button has been removed.
+	An issue with earlier mount control boards not returning the number of worm steps has been fixed. If a valid number isn't returned then it is loaded from the ini file instead (default EQ6 value).
+	PEC save now uses a file format compatible with perecorder version 1.0.12 or later. PEC file load has been change to accept perecorder V1.0.12 file format (earlier versions should also load).
+	Graphical tracking buttons are trialled with this version. Each button displays associated tooltip text (loaded from the various language dlls) when hovering over it
+	EQMOD V1.13j includes French, Spanish and Dutch language dlls.
+
+EQMOD_ASCOM_BETA_V113i
+	Fix: Pulse guide Interval setting automatically saved on ini file upon movement of the slider bar and not only on driver exit.
+
+	New: Added an “Auto RA Sync” option
+
+	Auto RA Sync function was initially applied on old EQMOD releases and then removed when Maurice reported a drift when the mount is being polled at a regular interval of 200ms. However this drift is not known to exist on mounts on later versions. If ever the drift exists, it can be compensated using the RA Drift Compensate slider bar (which is not available as user-define-able setting back then). Auto syncing will work best for PERecorder and PECPlayback without relying on the emulated stepper values as it reads absolute mount positions both during recording and during playback.
+
+	With this release, the auto sync function is made available at the user's option to enable it or to disable it. To make PEC work best on the two modes;
+
+	Auto RA Sync function Disabled: RA value is generated using emulated (PC clock accurate) stepper values
+
+	RA Motor counter values are emulated here and less communication is imposed on the board avoiding any Comms drift.
+
+	Mount has to be properly RA Drift Compensated for the emulation data to be (tuned to the sidereal rate) virtually “In Sync” with the mount's stepper motor counter. PEC should become accurate at this point avoiding any “PEC drift” as earlier reported by Chris V.
+
+	This setting will work best on old board versions (V1.05 and earlier) as the mount does not require RA Drift compensation and the emulated data is always in-sync with the true stepper counter data.
+
+    Auto RA Sync function Enabled: RA Emulation is disabled here as EQMOD reads the stepper board every 200ms
+
+    May exhibit a COMMs drift on earlier board version which can be easily compensated using the “RA Drift Compensation”
+
+    PERecorder and PECPlayer will be ALWAYS “in Sync” here avoiding “PEC Drift” but you have to watch out for the reported COMMs drift
+
+	If user is not using PEC, best option is to disable the AutoSync function. This to ensure that there will be no COMMs drift regardless of board version. If user wishes to use PEC, both modes will work, you are simply required to RA Drift Compensate on both settings.
+
+	The RA Drift Compensation setting is automatically reset to “0” whenever the RA Sync function setting is changed. This ensures that the user has to re-define his RA compensation settings.
+
+
+
+EQMOD_ASCOM_BETA_V113h
+	Uploaded a test version of the EQMOD driver which improves the Stepper Emulator routines (used primarily for PERecording and PEC playback). Sidereal tracking accuracy is not related to this modification.
+	The versions prior to this release uses VB timers as 'software emulation' for stepper counters. The VB timers tend to lose their count accuracy whenever there are heavy processes working at the windows background and the errors tend to accumulate until the next sync operation because the stepper motor count is incremented based on fixed a constant on every timer tick.
+	Current version uses the PC's on-board hardware clock as basis for the computation. The VB timer here is now used to read the PC clock and convert its value to an emulated stepper motor count.
+
+This version also includes the V1.3 Spanish DLL.
+
+EQMOD_ASCOM_BETA_V113g
+	Fix: Extend RA Compensation settings: from -20 up to 20 (at 0.024 rcsec/sec per step)
+	RA Compensation settings now also compensates joystick/button/pad count slews
+	New Adjustable Eqmod Parameter:
+
+	Pulse guide Granularity Setting (Minimum Correction Pulse width) - The original minimum width setting was hard coded to 50 milliseconds (default value). Users can now adjust this value using a slider bar from 10 milliseconds to 50 milliseconds allowing correction pulse widths as low as 10 milliseconds on the given guide rate. PHD for example have correction duration values lower than 50 milliseconds. The combination of PEC, Drift compensation and Pulseguide granularity settings would allow the autoguiding software to poke even “minuscule” corrections to the mount from 0.1x up to 0.9x of the sidereal rate.
+
+	Users who are comfortable with their own pulse guide settings should keep this value to 50 milliseconds.
+
+
+EQMOD_ASCOM_BETA_V113f
+	Drift compensation slider bar. This slider bar basically “fine-tunes” the RA motor tracking rate. However, not all mounts require RA motor speed compensation, thus you may have to leave the settings to 0.
+
+	The drift compensation slider bar settings are stored in the ini file thus this should only be a one time setting unless you feel the need to compensate also for drift caused by polar alignment.
+
+Usage:
+
+Basically you move the slider bar to the desired setting and then click any of the tracking buttons. A positive value rotates the motor faster, a negative value rotates the motor slower.
+
+NOTE: You need to click the desired tracking button again every time you change the compensation setting.
+
+The drift compensation settings also adjusts the custom tracking rate, PEC, Sidereal, lunar, Solar, and pulse guide rates using your target minimal drift sidereal rate as the base rate.
+
+The RA compensation setting does not affect the mounts slews (spiral, gotos, joystick, pad).
+
+
+EQMOD_ASCOM_BETA_113e
+
+“PEC+Sidereal” displayed when tracking with PEC (previously custom rate was displayed)
+
+Joystick configuration modified to include PEC+Sidereal tracking button assignment.
+
+Mount worm period is now determined automatically thereby providing PEC support for EQ5. The Worm Period is exposed via Com interface RAWormPeriod.
+
+Sidereal rate stored and read form the EQMOD ini file.
+
+TimeStamp button added to the PEC display. When pressed, EQMOD reads the mounts RA motor position and writes it, together timestamp to the
+
+ini file. This feature is included so that if third party software such as K3CCDTools or PHD etc. is used record sidereal PE it will be possible for PECPrep to use the position time stamp to synchronise the acquired data to worm position and thereby produce a PE file that can be read into perecorder for smoothing & drift removal. Whilst perecorder is the preferred tool for PE acquisition this may provide an acceptable method for those using camera types that perecorder doesn't currently support.
+
+PEC + Pulse guiding changes:
+
+When a pulse guide command is received the correction pulse is applied using the current PEC rate not sidereal. During the pulse period PEC rate calculations continue but are not applied to the mount. When the Pulse finishes the rate is set to the result of the most recent PEC calculation.
+
+Sync mode and N-Point checkboxes have been replaced with two drop down lists - “Alignment Behavior” and “Sync Behavior”. Hopefully this will remove some confusion over these options.
+
+EQMOD_ASCOM_BETA_V113d
+
+Changes from previous version as follows:
+
+Bug fix to Autoguider DEC rate load from ini
+
+PE corrections stopped on Park.
+
+[Sidereal + PEC] button enabled on manual PEC file load.
+
+New [Display+] button added to cycle through main status displays
+
+On manual PEC file load main status frame shows the PEC curve.
+
+[setup] button moved to allow minimal desktop footprint.
+
+Window now restores both height when setup is closed - If the user resizes the window (perhaps to show only the status display) then on [setup] the window is expanded in height and width - on closing setup the window restores to the previous size.
+
+EQMOD_ASCOM_BETA_113c
+
+Integrated PEC playback. This represents the first stage of full PEC integration and allows tracking a PEC+Sidereal rate.
+
+Full integration of PEC with other EQMOD services such as pulse guiding, gamepad button support etc. have not yet be completed and
+
+will follow in due course.
+
+Some interface changes have been necessary to make space to add this
+
+new feature.:
+
+PulseGuiding settings: Vertical sliders have been replaced by horizontal sliders.
+
+AutoGuider Port Rate: Individual rate buttons replaced by drop down lists.
+
+Alignment/Sync: AFFINE_TAKI+POLAR option added (removed from “Other Settings”)
+
+Slew Controls: Spiral search controls added (removed from “Other Settings”)
+
+Track Rate: Custom tracking controls added; PEC+Sidereal button Added.
+
+EQMOD_ASCOM_BETA_V113b
+
+A new 'custom' interface to allow clients to instigate Sidereal rate adjustment without causing EQMOD to background poll the RA/DEC motor positions (the current MoveAxis interface does this). This interface may be subsequently removed once PEC has been fully integrated into EQMOD itself.
+
+The Custom Tracking Rate is now saved into the ini file on EQMOD load
+
+and saved on EQMOD closure as per the recent request on this forum.
+
+EQMOD_ASCOM_BETA_V113a
+
+The simulator and actual driver now use separate ini files. Find the sim files in %appdata%\EQMOD_SIM. If you want you can copy ini files back and forth as much as you like.
+
+EQMOD_ASCOM_BETA_V112l
+
+Bug fixes:
+
+RA Limit reset was still being overridden to default position on start up. Now if you set it to 0 it stays at 0.
+
+If EQMOD was maximised then the setup button pressed it would crash due to an unhandled exception - fix: handle the exception!
+
+Fix to MoveAxis function such that in-progress slews take priority.
+
+New features
+
+The Slewpad from can now be resized and the associate controls will reposition accordingly. This allows you to have a larger (or indeed smaller) slew pad area to receive mouse clicks. Dimensions are stored in the ini file so are preserved
+
+Two new COM interfaces added SyncRaMotor and SyncDecMotor. These return the current motor position from the mount and force a synchronisation of the emulated positions maintained by the driver. The provision of these new functions is the primary reason for this release as they are useful in syncronising motor position with PEC capture and Playback (currently under development). It is likely that to use these applications in future V112l or later will be a pre-requisite.

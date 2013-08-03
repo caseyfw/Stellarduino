@@ -1,0 +1,297 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+   <TITLE> Using Guide with a JMI/MicroGuider III encoder system </TITLE>
+   <META NAME="Author" CONTENT="Bill Gray">
+   <META NAME="GENERATOR" CONTENT="Mozilla/3.0Gold (Win16; U) [Netscape]">
+</HEAD>
+<BODY>
+
+<FONT SIZE=+2>
+<P><B> Using Guide with a JMI/MicroGuider III encoder system </B></P>
+</FONT>
+
+<P><i>Last updated 1 Mar 98</i></P>
+
+<P> You may have noticed that there are some new entries in
+Guide's Telescope Control dialog box,  under the Settings menu.
+These include the Dob Driver,  JMI/MicroGuider III,  CompuStar,
+Ultima 2000,  and others. </P>
+
+<P> In truth,  most of these are not quite ready yet.  (In some cases,
+I'm waiting for beta test reports;  in other cases,  they haven't even
+been started yet!)  One system that is nearing completion,  and will
+(I hope) pave the way for rapid completion of the other systems,  is
+the JMI/MGIII system.  (This is also known as the B-Box,  or
+<A HREF="http://www.microtec.net/~pdufour/index.htm"> Ouranos</A>,
+or Lumicon,  or Celestron Advanced Astro-Master... as best I can tell,
+these devices are all the same under the hood.) </P>
+
+<P> To use one of these devices with Guide,  the first step is to
+start up the Scope Control dialog box,  and click on the "JMI/MGIII"
+dialog box,  and set the encoder resolution and serial port.  When
+you do this and click OK,  Guide will send the "set resolution" command
+to your encoders,  initializing them. </P>
+
+<P> When you do this,  a new "Scope Pad" option appears on the menu bar.
+Clicking on this option brings up a dialog box closely resembling the
+Meade LX-200 control pad.  (There is a reason for that similarity.
+Eventually,  I want to support all LX-200 functions.  But this will
+have to come later...) </P>
+
+<P> Your first step will have to be to align the telescope on at least
+two stars.  The easiest way to do this is to first hit Alt-N;  this is
+a "hidden hotkey" that results in a full-sky (180 degree) view of what
+is overhead right now.  It's much like the all-sky map given in the
+center pages of many astronomy publications.  Now right-click on the
+alignment star you wish to add,  point  your telescope at that star,
+and click on "Add Alignment." </P>
+
+<P> For your first star,  Guide will pop up a short dialog box asking
+if you are using an equatorial,  alt/az,  or an alt/az on a tracking
+platform.  (It needs to know this to do a proper job of alignment.) </P>
+
+<P> Now repeat this for at least one more star.  (The second star is
+used to distinguish between clockwise and counterclockwise.)  Adding
+still more stars will have two advantages.  It will enable Guide to
+improve alignment in that part of the sky,  since it can use the nearby
+reference star to avoid errors.  And,  once you have three or more
+stars,  you can start to use the <A HREF="#mec"> mechanical error
+correction system </A> to get <i> really </i> precise pointing. </P>
+
+<P> Once you have at least two stars,  though,  you can point your
+telescope at any part of the sky and hit "Slew Guide".  Guide will
+read the encoder positions,  convert to celestial coordinates,  and
+draw a chart of that part of the sky. </P>
+
+<P> Alternatively,  you can click on "Slew Telescope".  In this case,
+Guide will read the encoder positions twice a second,  and a red indicator
+will show the point on the chart where the telescope is currently pointed.
+(If that point isn't on the chart,  Guide will redraw the chart centered
+on that point;  <i>then</i> it will show the red indicator.) </P>
+
+<P> At present,  that's all there is to it.  Eventually,  some niceties
+will have to be added (ways to set the frequency with which the indicator
+is redrawn,  and a way to set just how far the indicator can move without
+prompting a redraw,  and a way to access the ALIGNER software from inside
+Guide... among many others!)  But first,  I'd like to be absolutely
+certain that the above really works. </P>
+
+<FONT SIZE=+2>
+<A NAME="mec"></A> <P><B> Using Mechanical Error Correction (MEC): </B></P>
+</FONT>
+
+<P> After about five years of playing about with the subject,  I can
+finally offer some software to handle the problem of correcting certain
+types of errors common in controlling telescopes.  The Windows software
+used for doing this,  along with a description of how it all works and
+what it can do,  and an example file of alignment stars,  follows.</A></P>
+
+<P><A HREF="aligner.exe"> Click here to get ALIGNER.EXE </A></P>
+<P><A HREF="align.dat"> Click here for an example ALIGN.DAT file </A></P>
+
+<P><B> Underlying theory: </B> Every telescope is mechanically imperfect
+enough to have certain errors,  such as being poorly aligned (or,  for
+alt/az mounts,  not perfectly level);  having the alt/az (or RA and dec)
+axes not be perfectly perpendicular;  the axes can be off-axis,  or
+elliptical;  the tube can flex at certain parts of the sky;  and so on.
+The purpose of ALIGNER is to correct for these errors by analyzing
+a dataset of alignment stars for your telescope.  After you have aligned
+on,  say,  a dozen stars,  ALIGNER can say:  "Ahh... your telescope is
+tilted 14.5 arcminutes north/south,  23.8 arcminutes east/west,  the
+alt/az axes are non-perpendicular by 17.1 arcminutes..." and so on.
+Then,  software such as GUIDE can correct for these errors,  resulting
+in extremely precise pointing accuracy.  It won't matter that your
+mount is badly non-level,  or non-perpendicular,  or that the azimuth
+axis is off-center;  Guide will be able to use the ALIGNER data to
+compensate.</P>
+
+<P> In fact,  ALIGNER can correct for a few errors (say,  a non-level
+mount) using only three stars.  But adding more stars is always a
+good idea;  not only does it allow ALIGNER to figure out more effects,
+it makes ALIGNER more likely to find an optimal solution,  instead of
+just a "pretty good" one. </P>
+
+<P> However, <i> non-repeatable </i> errors cannot be corrected.  If your
+stepper motors or encoders are pointed at a part of the sky at one time,
+but give different results the next time,  then there is not much that
+<i> any </i> error-correction software can do. </P>
+
+<P> At present,  ALIGNER only corrects for a few of the more important
+errors.  In theory,  it could be expanded to include far more "higher-order"
+terms.  (Solving for those terms would require more alignment stars,
+though.) </P>
+
+<P> We'll assume that you have used the method described above to
+add some alignment stars to Guide's database,  stored in ALIGN.DAT.
+(If you just want to see how the MEC process works,
+<A HREF="align.dat"> download this example ALIGN.DAT</A>,
+containing 20 alignment stars collected by Steve Lee.) </P>
+
+<P><B> Running ALIGNER: </B>  Once you have an ALIGN.DAT,  either from
+building up your own list of alignment stars or by downloading Steve Lee's
+data,  run ALIGNER.  It will automatically assume that no corrections at
+all are included,  and will produce a huge RMS error.  (In the case of
+Steve Lee's data,  it comes up with a 1.2 degree error!)  It lists the
+alt/az and error residuals for each star,  and a set of check-boxes
+corresponding to the errors that can be corrected. </P>
+
+<P> If you click on "Tilts" and then "Recompute",  the errors will usually
+drop quite a bit.  In the case of Steve's data,  it drops to about .3
+degrees RMS,  indicating that the major source of trouble was just that
+the mount wasn't perfectly vertical. </P>
+
+<P> You can then click on assorted checkboxes and recompute,  examining
+the RMS errors and residuals to determine whether or not adding the
+given item is really helping improve error correction.  But if you turn
+on a lot of boxes and don't have enough alignment data,  ALIGNER won't
+get a good solution,  and you'll see the residuals go haywire.  (The
+number of stars needed to get a good solution depends on how many
+boxes you check and on the geometry of the alignment data.  Generally
+speaking,  getting data for a small part of the sky,  or for a small
+range on one axis,  can lead to trouble.) </P>
+
+<P> In the case of Steve's data,  I found that the best fit involved
+checking every box except the "off-axis (alt)" one.  Using this,  I got
+RMS errors in X (azimuth) of .075 degrees,  and in Y (altitude) of
+.041,  for a total RMS error of .085 degrees.  One could probably not
+hope to improve this immensely,  especially since 8192-step encoders
+have a resolution of .044 degrees.  (On other systems with greater
+resolution,  such as most stepper-motor ones,  higher accuracy would
+be quite possible.) </P>
+
+<P><B> Using the results in Guide: </B> Once you have an alignment setup
+you are happy with,  you can click "OK" to save the data.  If you do this,
+Guide will then make use of that alignment data in the future,  when you
+click on the "Slew Guide" feature. </P>
+
+<P><B> The Future: </B> This alignment software must be made available
+from within Guide.  It would be good to have a "delete alignment star"
+feature,  plus a checkbox to enable a "local resynch" mode.  In this
+mode,  Guide would check the alignment star nearest a given point,  and
+use it to correct that point.  For example,  if the nearest alignment
+star had residuals of .034 degrees in alt and .092 degrees in az,  Guide
+would offset by those values in the neighborhood of that star. </P>
+
+<P> German equatorial users have pointed out that the balance of such
+mounts shifts greatly between the eastern and western part of the sky.
+It may be necessary for ALIGNER to create two separate solutions in
+such instances. </P>
+
+<P><B> Using the MEC data inside your own telescope control software: </B>
+A few people would like to use ALIGNER to analyze their mount,  then
+make use of that data inside their own telescope software.  To do this
+requires two things.  First,  you need to understand the ALIGN.DAT
+file ALIGNER reads to analyze the mount.  Second,  you need to use the
+C/C++ source code that,  using the analysis results,  converts an
+encoder position to and from angular coordinates. </P>
+
+<P> First,  take a look at the following shortened ALIGN.DAT: </P>
+
+<pre>
+7 -31.278600 149.212400 8192.000000 8192.000000
+-4091.000000 -4096.000000 68.556871 -2.455590
+841.000000 -3607.000000 48.872886 -149.078971
+650.000000 4000.000000 74.540977 -159.108479
+3512.000000 -3171.000000 27.422750 -30.656332
+-3081.000000 -3360.000000 35.237956 39.136460
+-609.000000 -3331.000000 35.112297 146.463075
+-751.000000 -3913.000000 61.036116 138.834626
+</pre>
+
+<P>The first line indicates that seven stars are in the dataset,
+and that the scope is at longitude E 149.2124, S 31.2786;  and that
+there are 8192 steps/revolution on both axes.  You can ignore the
+lat/lon. Guide needs it for certain purposes,  but for what you're
+doing,  only the facts that we've got seven stars and 8192
+steps/revolution matter.</P>
+
+<P> For each star,  we have an encoder x and y,  followed by what for
+convenience we'll call an alt/az value.  (In reality,  it could be a
+declination and RA,  or a declination and hour angle.  If it's a scope
+on an equatorial platform,  it would be two angles that are pretty
+close to alt/az,  but not quite,  because the scope keeps tilting.
+But for short,  we'll call these "alt/az" values.) </P>
+
+<P> For example,  the first star had encoder readings of -4091 on the
+azimuth axis and -4096 on the altitude axis.  The star itself was at
+alt=68.556871 degrees,  az=-2.455590 degrees. </P>
+
+<P> Once you've created a file of the above type,  you can run it through
+ALIGNER and analyze the mount.  When you click "OK",  ALIGNER stores its
+results in a file called ALIGN.OUT.  I'm going to gloss over the inner
+magic of how it derives the analysis.  It's not proprietary (math is a
+very public-domain thing),  but it's sufficiently painful and complex
+that I'd rather not tackle it here.  The good news is that all that
+trouble is hidden from your sight anyway,  as you'll see below. </P>
+
+<P> That ALIGN.OUT file will look something like this. </P>
+
+<PRE>
+7 -31.278600 149.212400
+17  # N params
+  -0.0007669904 # Alt rate (radians/step)
+  -2.0387783095 # Alt zero (radians)
+   0.0007669904 # Az rate (radians/step)
+   9.3231921366 # Az zero (radians)
+  -0.0136572089 # Tilt #1 (radians)
+  -0.0170534583 # Tilt #2 (radians)
+   0.0006550648 # Non-perpendicularity (radians)
+   0.0603970893 # Flexure (cos alt) (radians)
+   0.0013239919 # cos az
+  -0.0020600318 # sin az
+   0.0851591019 # sin alt
+   0.0000000000 # cos( 2 * alt)
+   0.0000000000 # sin( 2 * alt)
+   0.0051045269 # cos( 2 * az)
+   0.0016838509 # sin( 2 * az)
+   0.0033794079 # Warped tbl 1
+   0.0017582798 # Warped tbl 2
+#  Xencoder  Yencoder     Altitude   Azimuth      Az resid   Alt resid
+  -4091.00   -4096.00      68.557    357.544       -0.012     -0.000
+  -7351.00   -3607.00      48.873    210.921       -0.010      0.008
+  -7542.00   -4192.00      74.541    200.892        0.024     -0.002
+  -4680.00   -3171.00      27.423    329.344        0.004      0.011
+ -11273.00   -3360.00      35.238     39.136        0.003     -0.006
+  -8801.00   -3331.00      35.112    146.463        0.006     -0.014
+  -8943.00   -3913.00      61.036    138.835       -0.012      0.003
+RMS errors (degrees):  az 0.012  alt 0.008  total 0.014
+</PRE>
+
+<P> As it happens,  a lot of this data is still irrelevant.  The only
+thing that really matters is the '17' (indicating a seventeen-coefficient
+array) and the subsequent 17 floating-point values.  ALIGNER does throw
+in quite a bit of other data,  such as residuals for each alignment star
+and some comments as to what each parameter means,  but that was just
+so the human programming it (me) knew what was going on.  (Someday,
+I may create code that uses the alignment data at the end of ALIGN.OUT
+to perform a "local offset" function.  In converting encoder coordinates,
+we would look for the nearest alignment star and examine its residuals,
+and adjust our aim accordingly.  But it's not clear yet that this would
+be either necessary or helpful.) </P>
+
+<P> You can just read those 17 doubles into an array and then use two
+C/C++ functions to convert encoder coordinates to angles and vice versa.
+<A HREF="mec.zip"> Click here for example source code showing all this.
+</A></P>
+
+<P> At present,  the modelling works as follows.  We assume that
+you can convert the encoder positions to "theoretical" angles,
+pseudo_alt and pseudo_az (in the above case,  you can get them in
+degrees by multiplying by 360/8192) and subtracting a "zero point".
+We then have to correct these angles,  though,  for the effects of
+off-axis and eccentric bearings.  It so happens that these effects
+can be expressed as (sin and cosine)( pseudo_angle) and (sin and cosine)
+(2 * pseudo_angle),  respectively.  These happen to be the starting
+terms of a Fourier series.  In a sense,  what we're doing is a Fourier
+analysis of the function (real angle - angle from encoder),  the "error
+function". </P>
+
+<P> Without too much trouble,  we could extend that function to higher
+order terms,  and include more subtle effects.  Right now,  aside from
+including the effects of a warped table and of non-perpendicular axes,
+most of the subtlety is avoided.  It can be added in a heartbeat,  if
+it turns out to be helpful. </P>
+
+</BODY>
+</HTML>

@@ -1,0 +1,1220 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+
+</style>
+</head>
+
+<body lang=EN-US link="#57c9fe" vlink="#57c9fe" style='tab-interval:.5in'>
+
+<div class=Section1>
+
+<div style='border:none;border-top:solid black .75pt;padding:0in 0in 0in 0in;
+background:#242424'>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><strong><span style='font-size:18.0pt;
+font-family:Verdana;color:#B8E5FD'>EQContrl.DLL Developer's Guide Version 1.0</span></strong><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+</span><strong><span style='font-size:13.5pt;font-family:Verdana;color:#B8E5FD'>1.0
+DRIVER and MOUNT INITALIZATION</span></strong><span style='font-size:8.0pt;
+font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'>&nbsp;The driver connects to the mount through the EQ_Init()
+function. It first opens the port at 9600 baud, 8 bits no parity, 1 stop bit.
+It then reads the mount's controller parameters and stores them within the DLL
+memory.<o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'>&nbsp;The main app must then call the EQ_InitMotors() function
+to initialize the motors and activate the mount's controller coil drivers. This
+will lock the motor at its current position. At this point you will hear the
+mount faint high pitch sound indicating that the motors are activated. You must
+also include within the EQ_InitMotors() function the initial values for the
+motor encoders. These values will depend on the Main application's preferred
+initial procesing values which could be any number within the 24BIT (3 bytes)
+range.<o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+</span><em><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>Sample
+Code</span></em><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;result = </span></em><strong><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>EQ_Init(COM1,9600,1000,1)</span></i></strong><em><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>&nbsp; ; Initialize
+COM1 at 9600 baud, 1000 millisecond timout, 1 retrycount</span></em><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;result = </span></em><strong><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>EQ_InitMotors(0x800000,0x800000)</span></i></strong><em><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'> ; Activate Coils
+with both motor encoders set at 0x800000</span></em><span style='font-size:
+8.0pt;font-family:Verdana;color:#B8E5FD'><br>
+&nbsp;<br>
+&nbsp;<o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><strong><span style='font-size:13.5pt;
+font-family:Verdana;color:#B8E5FD'>2.0 RA/DEC MOTOR GOTO</span></strong><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Each motor has its own
+independent controller that is specified by the motor_id parameter. That means
+each motor (RA and DEC) has to be treated independently. Before any slew
+process could take place, the Main App must first query if the motors are
+running or not through the function EQ_GetMotorStatus(). If its running, the
+main app must issue a EQ_MotorStop() function before it can initiate the GOTO
+microsteps function EQ_StartMoveMotor().<o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>Sample Code (all motor values here are in microstep
+count not coordinate count)</span></em><span style='font-size:8.0pt;font-family:
+Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>Delta_RA =
+YourGetNew_RA_OffsetPositionAPP();&nbsp;&nbsp; ' Compute for RA microstep count
+</span></em><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>Delta_DEC = YourGetNew_DEC_OffsetPositionAPP(); '
+Compute for DEC microstep count</span></em><span style='font-size:8.0pt;
+font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>Dir_RA = YourGetDir_RA_APP()&nbsp;&nbsp;&nbsp;' Compute
+for Direction 0-forward, 1-reverse</span></em><span style='font-size:8.0pt;
+font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>Dir_DEC = YourGetDir_RA_APP()&nbsp;&nbsp;&nbsp;' Compute
+for Direction 0-forward, 1-reverse</span></em><i><span style='font-size:7.5pt;
+font-family:Verdana;color:#B8E5FD'><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;</em><br>
+<em>Slowdown_RA = Delta_RA * 0.8&nbsp;&nbsp;&nbsp;' Specify which part of the
+microstepping series&nbsp; the motor should slow down</em><br>
+<em>Slowdown_DEC = Delta_DEC * 0.8 &nbsp;&nbsp;&nbsp;' Specify which part of
+the microstepping series&nbsp;&nbsp; the motor should slow down</em></span></i><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><br>
+</span><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<br>
+<strong>&nbsp;&nbsp;&nbsp; * WARNING!! - Setting the Slowdown_RA/DEC equal to
+the requested microstep count will cause&nbsp;the mount to slew and make
+an&nbsp;'abrupt'&nbsp; stop on the desired location. This may not be&nbsp; good
+for the mount specially if its carrying a very heavy load. This value specifies
+when&nbsp; during the slew process the motors will start to de-accelerate.</strong><b><br>
+</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>' Stop all motors</span></em><span style='font-size:
+8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;result = </span></em><strong><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>EQ_MotorStop(0)</span></i></strong><em><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>;&nbsp;&nbsp;&nbsp;'
+Stop RA Motor</span></em><i><span style='font-size:7.5pt;font-family:Verdana;
+color:#B8E5FD'><br>
+<em>&nbsp;</em><br>
+<em>' You may add your own error handling here</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;result = </em><strong>EQ_MotorStop(1)</strong><em>;&nbsp;&nbsp;&nbsp;'
+Stop DEC Motor</em></span></i><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>' You may add your own error handling here</span></em><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'><br>
+<em>&nbsp;</em><br>
+<em>' Wait until the motors have stopped moving</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;do {</em><br>
+<em>&nbsp;&nbsp;</em><br>
+<em>&nbsp;&nbsp;result_ra = </em><strong>EQ_GetMotorStatus(0)</strong><em>;&nbsp;'
+Get State of Motors</em><br>
+<em>&nbsp;&nbsp;result_dec = </em><strong>EQ_GetMotorStatus(1)</strong><em>;&nbsp;</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;&nbsp;' You may add your own error / timeout handling here</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;&nbsp;&nbsp; } while (((result_ra &amp; 0x10)&nbsp;+ (result_dec
+&amp; 0x10)) != 0)&nbsp;' Wait until both motors are not rotating</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;' Initiate the GOTO (Motor Slew) command</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;</em><strong>EQ_StartMoveMotor(0, 0, Dir_RA,&nbsp; Delta_RA,
+Slowdown_RA)</strong><em>;</em><br>
+<em>&nbsp;</em><strong>EQ_StartMoveMotor(0, 0, Dir_DEC,&nbsp; Delta_DEC,
+Slowdown_DEC)</strong><em>;</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;'Both RA and DEC motors should be moving at this point</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;' Wait until the motors have stopped moving</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;do {</em><br>
+<em>&nbsp;&nbsp;</em><br>
+<em>&nbsp;&nbsp;result_ra = </em><strong>EQ_GetMotorStatus(0)</strong><em>;&nbsp;'
+Get State of Motors</em><br>
+<em>&nbsp;&nbsp;result_dec = </em><strong>EQ_GetMotorStatus(1)</strong><em>;&nbsp;</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;&nbsp;' You may add your own error / timeout handling here</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} while (((result_ra &amp; 0x10)&nbsp;+
+(result_dec &amp; 0x10)) != 0)&nbsp;' Wait until both motors are not rotating</em><br>
+<em>&nbsp;&nbsp;&nbsp;&nbsp;</em><br>
+</span></i><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;&nbsp;&nbsp;
+<br>
+</span><strong><span style='font-size:13.5pt;font-family:Verdana;color:#B8E5FD'>3.0
+MOTOR SLEWING / USER INITIATED BUTTON SLEW</span></strong><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+&nbsp;Main app should initate a EQ_MotorStop() function, query the status of
+the motors, and then<br>
+initate the slew command.<br>
+&nbsp;<br>
+</span><em><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>Sample
+Code (for RA Slewing on the positive(+) direction)</span></em><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;result = </span></em><strong><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>EQ_MotorStop(0)</span></i></strong><em><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>;&nbsp;&nbsp;&nbsp;'
+Stop RA Motor</span></em><i><span style='font-size:7.5pt;font-family:Verdana;
+color:#B8E5FD'><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;&nbsp;' You may add your own error / timeout handling here</em><br>
+<em>&nbsp;&nbsp;</em><br>
+<em>&nbsp;do {</em><br>
+<em>&nbsp;&nbsp;result_ra = </em><strong>EQ_GetMotorStatus(0)</strong><em>;&nbsp;'
+Get State of RA Motor</em><br>
+<em>&nbsp;&nbsp;' You may add your own error / timeout handling here</em></span></i><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;&nbsp;&nbsp; } while ((result_ra &amp;
+0x10)&nbsp;!= 0)&nbsp;' Wait until RA motor not rotating</span></em><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'><br>
+<em>&nbsp;&nbsp;&nbsp; </em><br>
+<em>&nbsp;result = </em><strong>EQ_Slew(0,0,0,399)</strong><em>;&nbsp;&nbsp;&nbsp;'
+Slew RA Motor at the rate of Sidreal * 399</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;&nbsp;' App must then wait for the user to release the button</em><br>
+<em>&nbsp;&nbsp;</em><br>
+<em>&nbsp;result = </em><strong>EQ_MotorStop(0)</strong><em>;&nbsp;&nbsp;&nbsp;'
+Stop RA Motor</em><br>
+<em>&nbsp;&nbsp;&nbsp; </em><br>
+</span></i><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;&nbsp;<br>
+</span><strong><span style='font-size:13.5pt;font-family:Verdana;color:#B8E5FD'>4.0
+TRACKING</span></strong><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'>&nbsp;Main app should initate a EQ_MotorStop() function, query
+the status of the motors, and then<br>
+initate the track command.<o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>Sample Code</span></em><span style='font-size:8.0pt;
+font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;result = </span></em><strong><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>EQ_MotorStop(0)</span></i></strong><em><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>;&nbsp;&nbsp;&nbsp;'
+Stop RA Motor</span></em><i><span style='font-size:7.5pt;font-family:Verdana;
+color:#B8E5FD'><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;&nbsp;' You may add your own error / timeout handling here</em><br>
+<em>&nbsp;&nbsp;</em><br>
+<em>&nbsp;do {</em><br>
+<em>&nbsp;&nbsp;result_ra = </em><strong>EQ_GetMotorStatus(0)</strong><em>;&nbsp;'
+Get State of RA Motor</em><br>
+<em>&nbsp;&nbsp;' You may add your own error / timeout handling here</em></span></i><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;&nbsp;&nbsp; } while ((result_ra &amp;
+0x10)&nbsp;!= 0)&nbsp;' Wait until RA motor not rotating</span></em><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'><br>
+<em>&nbsp;&nbsp;&nbsp; </em><br>
+<em>&nbsp;result = </em><strong>EQ_StartRATrack(0, 0, 0 , 0)</strong><em>;&nbsp;&nbsp;'
+Slew RA Motor at the Sidreal rate</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;' Below is the function to stop tracking</em><br>
+<em>&nbsp;&nbsp;</em><br>
+<em>&nbsp;</em><strong>EQ_MotorStop(0)</strong><em>;&nbsp;&nbsp;&nbsp;&nbsp;'
+Stop RA Motor</em><br>
+<em>&nbsp;&nbsp;&nbsp;</em><br>
+</span></i><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>&nbsp;<br>
+</span><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;<br>
+</span><strong><span style='font-size:13.5pt;font-family:Verdana;color:#B8E5FD'>5.0
+GUIDING</span></strong><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'>&nbsp;Main app must first initate the track command (as
+specified above) then initate the<br>
+&nbsp;corresponding guide adjustments;<br>
+&nbsp;<br>
+</span><em><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>Sample
+Code (When main app initates a 50% of Sidreal RA+ Guide)</span></em><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;result = </span></em><strong><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>EQ_SendGuideRate(0,
+0, 5, 0, 0, 0)</span></i></strong><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>;&nbsp;' Set RA speed at 50% more of the Sidreal</span></em><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;sleep(pulseduration);</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;result = </em><strong>EQ_SendGuideRate(0, 0, 0, 0, 0, 0)</strong><em>;&nbsp;'
+Set RA speed back to Sidreal</em><br>
+<em>&nbsp;</em></span></i><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>Sample Code (When main app initates a 50% of Sidereal
+DEC- Guide)</span></em><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;result = </span></em><strong><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>EQ_MotorStop(1)</span></i></strong><em><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>;&nbsp;&nbsp;&nbsp;'
+Stop DEC Motor</span></em><i><span style='font-size:7.5pt;font-family:Verdana;
+color:#B8E5FD'><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;&nbsp;' You may add your own error / timeout handling here</em><br>
+<em>&nbsp;&nbsp;</em><br>
+<em>&nbsp;do {</em><br>
+<em>&nbsp;&nbsp;result_dec = </em><strong>EQ_GetMotorStatus(1)</strong><em>;&nbsp;'
+Get State of DEC Motor</em><br>
+<em>&nbsp;&nbsp;' You may add your own error / timeout handling here</em></span></i><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;&nbsp;&nbsp; } while ((result_dec &amp;
+0x10)&nbsp;!= 0)&nbsp;' Wait until RA motor not rotating</span></em><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;result = </span></em><strong><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>EQ_SendGuideRate(1,
+0, 5, 1, 0, 0)</span></i></strong><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>;&nbsp;' Start DEC motor at&nbsp; speed at 50% more of
+the Sidreal</span></em><i><span style='font-size:7.5pt;font-family:Verdana;
+color:#B8E5FD'><br>
+<em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' and at Negative(-) direction</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;sleep(pulseduration);</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;result = </em><strong>EQ_MotorStop(1)</strong><em>;&nbsp;&nbsp;&nbsp;'
+Stop DEC Motor</em></span></i><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+</span><strong><span style='font-size:13.5pt;font-family:Verdana;color:#B8E5FD'>6.0
+GUIDING RATES&nbsp;SETTINGS&nbsp;ON THE&nbsp;AUTOGUIDER PORT</span></strong><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'>&nbsp;To set the Autoguider Port's guide rate, Main app must
+send a separate command on the RA and DEC<br>
+&nbsp;controller;<br>
+&nbsp;<br>
+</span><em><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>Sample
+Code;</span></em><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;result = </span></em><strong><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>EQ_SetAutoguiderPortRate(0,2)</span></i></strong><em><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>;&nbsp;&nbsp;' Set RA
+GuidePort at .75</span></em><i><span style='font-size:7.5pt;font-family:Verdana;
+color:#B8E5FD'><br>
+<em>&nbsp;result = </em><strong>EQ_SetAutoguiderPortRate(1,2)</strong><em>;&nbsp;&nbsp;'
+Set DEC GuidePort at .75</em></span></i><span style='font-size:8.0pt;
+font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><i><span style='font-size:8.0pt;font-family:
+Verdana;color:#B8E5FD'><br>
+</span></i><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><br>
+</span><strong><span style='font-size:13.5pt;font-family:Verdana;color:#B8E5FD'>7.0
+SYNC</span></strong><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'>&nbsp;The SYNC function basically is a software adjusment
+function based on the current position <br>
+&nbsp;of the RA and DEC stepper motor encoders<br>
+&nbsp;<br>
+&nbsp;<br>
+</span><em><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>Sample
+Code;</span></em><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;' At this point, MOUNT and SCOPE must be pointed
+at the desired-to-be-synced sky object</span></em><i><span style='font-size:
+7.5pt;font-family:Verdana;color:#B8E5FD'><br>
+<em>&nbsp;&nbsp; and should be tracking</em></span></i><span style='font-size:
+8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><em><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;Current_RA = </span></em><strong><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>EQ_GetMotorValues(0)</span></i></strong><em><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>;&nbsp;&nbsp;' Read
+Current RA Encoder value</span></em><i><span style='font-size:7.5pt;font-family:
+Verdana;color:#B8E5FD'><br>
+<em>&nbsp;Current_DEC = </em><strong>EQ_GetMotorValues(1)</strong><em>;&nbsp;&nbsp;'
+Read Current DEC Encoder value</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;Current_RA_Coordinate =
+Your_RA_Encoder_to_RA_coordinate_converter_function(Current_RA);</em><br>
+<em>&nbsp;Current_DEC_Coordinate =
+Your_DEC_Encoder_to_DEC_coordinate_converter_function(Current_DEC);</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;YourProcess_RADEC_Sync_Correction_app(Current_RA_Coordinate,
+Current_DEC_Coordinate, Sky_Object_RA_Coordinate, Sky_Object_DEC_Coordinate);</em><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;'At this point each time you initate the succeding GOTO command, the
+app should return the correct </em><br>
+<em>&nbsp;Delta_RA and Delta_DEC microstep counts.</em></span></i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'><br>
+&nbsp;</span><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><br>
+</span><strong><span style='font-size:13.5pt;font-family:Verdana;color:#B8E5FD'>8.0
+Other Commands</span></strong><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>8.1 Get Mount Version</strong><b><br>
+</b>&nbsp;<br>
+</span><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>&nbsp;<em>mount_version
+= </em><strong><i>EQ_GetMountVersion()</i></strong><em>;</em><i><br>
+<em>&nbsp;</em><br>
+<em>&nbsp;' Version number is XX.YY where XX is the 8bit value at bits 8 to 15
+and YY is an 8 bit value at bits 0 to </em></i>7<br>
+&nbsp;</span><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <strong>8.2 Get Mount Status</strong><br>
+&nbsp;<br>
+&nbsp;</span><em><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>mountstats
+= </span></em><strong><i><span style='font-size:7.5pt;font-family:Verdana;
+color:#B8E5FD'>EQ_GetMountStatus()</span></i></strong><em><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>;</span></em><i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'><br>
+<em>&nbsp;&nbsp;</em><br>
+<em>&nbsp;&nbsp;'Returns 1 if Connected, 0 - Not Connected</em></span></i><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'><br>
+&nbsp;</span><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<strong>8.3 Get RA/DEC Motor Total microstep count for
+a 360 degree revolution</strong><b><br>
+</b>&nbsp;<br>
+&nbsp;<br>
+</span><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>&nbsp;&nbsp;<em>ra_total_steps
+= </em><strong><i>EQ_GetTotal360microstep(0)</i></strong><em>;</em><i><br>
+<em>&nbsp;&nbsp;dec_total_steps = </em><strong>EQ_GetTotal360microstep(1)</strong><em>;</em><br>
+<em>&nbsp;</em></i></span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+<em>&nbsp;</em></span><em><span style='font-size:7.5pt;font-family:Verdana;
+color:#B8E5FD'>' These values are usually needed for GOTO coordinate
+computations</span></em><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+</span><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>&nbsp;</span><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;<o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><strong><span style='font-size:13.5pt;
+font-family:Verdana;color:#B8E5FD'>EQContrl.DLL FUNCTIONS AND PARAMETERS
+DESCRIPTION</span></strong><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+</span><span style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;Function
+name&nbsp;&nbsp;&nbsp; : <strong>EQ_Init()</strong><b><br>
+</b></span><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Connect to the EQ Controller via Serial and initialize the stepper board<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+000 - Success<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+001 - COM Port Not available<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+002 - COM Port already Open<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+003 - COM Timeout Error<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+005 - Mount Initialized on using non-standard parameters<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+010 - Cannot execute command at the current stepper controller state<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+999 - Invalid parameter<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : STRING COMPORT
+Name<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE baud -
+Baud Rate<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE timeout
+- COMPORT Timeout (1 - 50000)<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE retry -
+COMPORT Retry (0 - 100)</span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_Init
+(COMPORT As String, baud As Long, timeout As Long, retry As Long) As Long<br>
+DWORD __stdcall EQ_Init(char *comportname,DWORD baud,DWORD timeout, DWORD
+retry)</span><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+</span><span style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;Function
+name&nbsp;&nbsp;&nbsp; : </span><strong><span style='font-family:Verdana;
+color:#B8E5FD'>EQ_End()</span></strong><span style='font-size:10.0pt;
+font-family:Verdana;color:#B8E5FD'><br>
+</span><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>&nbsp;</span><span
+style='font-size:7.5pt;color:#B8E5FD'>Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Close the COM Port and end EQ Connection<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;00
+- Success<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - COM Port Not Openavailable</span><span style='font-size:8.0pt;font-family:
+Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_End
+() As Long<br>
+DWORD __stdcall EQ_End()</span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+</span><span style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;Function
+name&nbsp;&nbsp;&nbsp; : </span><strong><span style='font-family:Verdana;
+color:#B8E5FD'>EQ_InitMotors()</span></strong><b><span style='font-family:Verdana;
+color:#B8E5FD'><br>
+</span></b><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Initialize RA/DEC Motors and activate Motor Driver Coils<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+000 - Success<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+001 - COM PORT Not available<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+003 - COM Timeout Error<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+006 - RA Motor still running<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+007 - DEC Motor still running<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+008 - Error Initializing RA Motor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+009 - Error Initilizing DEC Motor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+010 - Cannot execute command at the current stepper controller state</span><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: DOUBLE RA_val&nbsp; Initial ra microstep counter value<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp; : DOUBLE DEC_val&nbsp;&nbsp;&nbsp;&nbsp;
+Initial dec microstep counter value</span><span style='font-size:8.0pt;
+font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_InitMotors
+(RA as Long, DEC As Long) As Long<br>
+DWORD __stdcall EQ_InitMotors(DWORD RA_val, DWORD DEC_val)</span><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+</span><span style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;Function
+name&nbsp;&nbsp;&nbsp; : </span><strong><span style='font-family:Verdana;
+color:#B8E5FD'>EQ_GetMotorValues()</span></strong><b><span style='font-family:
+Verdana;color:#B8E5FD'><br>
+</span></b><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Get RA/DEC Motor microstep counts<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Double - Stepper Counter
+Values<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0 - 16777215&nbsp; Valid Count Values<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0x1000000 - Mount Not available<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0x1000005 - COM TIMEOUT<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0x10000FF - Illegal Mount reply<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0x3000000 - Invalid Parameter<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+motor_id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - RA Motor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - DEC Motor</span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_GetMotorValues
+(value As Long) As Long<br>
+DWORD __stdcall EQ_GetMotorValues(DWORD
+motor_id)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+</span><span style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;Function
+name&nbsp;&nbsp;&nbsp; :</span><strong><span style='font-family:Verdana;
+color:#B8E5FD'> EQ_GetMotorStatus()</span></strong><span style='font-size:10.0pt;
+font-family:Verdana;color:#B8E5FD'><br>
+</span><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Get RA/DEC Stepper Motor Status<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+128 - Motor not rotating, Teeth at front contact<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+144 - Motor rotating, Teeth at front contact<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+160 - Motor not rotating, Teeth at rear contact<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+176 - Motor rotating, Teeth at rear contact<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+200 - Motor not initialized<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+001 - COM Port Not available<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+003 - COM Timeout Error<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+999 - Invalid Parameter<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+motor_id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - RA Motor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - DEC Motor</span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_GetMotorStatus
+(value As Long) As Long<br>
+DWORD __stdcall EQ_GetMotorStatus(DWORD motor_id)</span><span style='font-size:
+8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:10.0pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;Function name&nbsp;&nbsp;&nbsp; : </span><strong><span
+style='font-family:Verdana;color:#B8E5FD'>EQ_SeTMotorValues()</span></strong><span
+style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'><br>
+</span><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Sets RA/DEC Motor microstep counters (pseudo encoder position)<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE - Stepper Counter
+Values<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+000 - Success<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+001 - Comport Not available<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+003 - COM Timeout Error<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+010 - Cannot execute command at the current stepper controller state<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+011 - Motor not initialized<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+999 - Invalid Parameter<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+motor_id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - RA Motor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - DEC Motor<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+motor_val<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0 - 16777215&nbsp; Valid Count Values</span><span style='font-size:8.0pt;
+font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_SetMotorValues
+(motor_id As Long, motor_val As Long) As Long<br>
+DWORD __stdcall EQ_SetMotorValues(DWORD motor_id, DWORD motor_val)</span><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+</span><span style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;Function
+name&nbsp;&nbsp;&nbsp; : </span><strong><span style='font-family:Verdana;
+color:#B8E5FD'>EQ_StartMoveMotor</span></strong><span style='font-size:10.0pt;
+font-family:Verdana;color:#B8E5FD'><br>
+</span><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>&nbsp;</span><span
+style='font-size:7.5pt;color:#B8E5FD'>Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Slew RA/DEC Motor based on provided microstep counts<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+000 - Success<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+001 - COM PORT Not available<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+003 - COM Timeout Error<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+004 - Motor still busy, aborted<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+010 - Cannot execute command at the current stepper controller state<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+011 - Motor not initialized<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+999 - Invalid Parameter<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+motor_id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - RA Motor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - DEC Motor<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+hemisphere<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - North<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - South<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+direction<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - Forward(+)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - Reverse(-)<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE steps
+count<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE motor
+de-acceleration&nbsp; point (set between 50% t0 90% of total steps)</span><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_StartMoveMotor
+(motor_id As Long, hemisphere As Long, direction As Long, steps As Long,
+stepslowdown As Long) As Long<br>
+DWORD __stdcall EQ_StartMoveMotor(DWORD motor_id, DWORD hemisphere, DWORD
+direction,&nbsp; DWORD steps, DWORD stepslowdown)</span><span style='font-size:
+8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:10.0pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;Function name&nbsp;&nbsp;&nbsp; : </span><strong><span
+style='font-family:Verdana;color:#B8E5FD'>EQ_Slew()</span></strong><b><span
+style='font-family:Verdana;color:#B8E5FD'><br>
+</span></b><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Slew RA/DEC Motor based on given rate<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+000 - Success<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+001 - Comport Not available<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+003 - COM Timeout Error<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+004 - Motor still busy<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+010 - Cannot execute command at the current stepper controller state<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+011 - Motor not initialized<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+999 - Invalid Parameter<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+motor_id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - RA Motor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - DEC Motor<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : INTEGER
+direction<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - Forward(+)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - Reverse(-)<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : INTEGER rate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+1-800 of Sidreal Rate</span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_Slew
+(motor_id As Long, hemisphere As Long, direction As Long, rate As Long) As Long<br>
+DWORD __stdcall EQ_Slew(DWORD motor_id, DWORD hemisphere, DWORD direction,
+DWORD rate)</span><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:10.0pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;Function name&nbsp;&nbsp;&nbsp; : </span><strong><span
+style='font-family:Verdana;color:#B8E5FD'>EQ_StartRATrack()</span></strong><span
+style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'><br>
+</span><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Track or rotate RA/DEC Stepper Motors at the specified rate<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+000 - Success<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+001 - Comport Not available<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+003 - COM Timeout Error<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+010 - Cannot execute command at the current stepper controller state<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+011 - Motor not initialized<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+999 - Invalid Parameter<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+trackrate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - Sidreal<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - Lunar<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+02 - Solar<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE hemisphere<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - North<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - South<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+direction<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - Forward(+)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - Reverse(-)</span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_StartRATrack
+(trackrate As Long, hemisphere As Long, direction As Long) As Long<br>
+DWORD __stdcall EQ_StartRATrack(DWORD trackrate, DWORD hemisphere, DWORD
+direction)</span><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+</span><span style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;Function
+name&nbsp;&nbsp;&nbsp; : </span><strong><span style='font-family:Verdana;
+color:#B8E5FD'>EQ_SendGuideRate()</span></strong><span style='font-size:10.0pt;
+font-family:Verdana;color:#B8E5FD'><br>
+</span><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Adjust the RA/DEC rotation trackrate based on a given speed adjustment rate<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+000 - Success<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+001 - Comport Not available<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+003 - COM Timeout Error<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+004 - Motor still busy<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+010 - Cannot execute command at the current stepper controller state<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+011 - Motor not initialized<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+999 - Invalid Parameter</span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: DOUBLE motor_id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - RA Motor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - DEC Motor<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+trackrate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - Sidreal<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - Lunar<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+02 - Solar<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+guiderate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - No Change<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - 10%<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+02 - 20%<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+03 - 30%<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+04 - 40%<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+05 - 50%<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+06 - 60%<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+07 - 70%<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+08 - 80%<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+09 - 90%<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+guidedir<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - Positive<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - Negative<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+hemisphere (used for DEC Motor control)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - North<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - South<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+direction (used for DEC Motor control)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - Forward(+)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - Reverse(-)</span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_SendGuideRate
+(motor_id As Long, trackrate As Long, guiderate As Long, guidedir As Long,
+hemisphere As Long, direction As Long) As Long<br>
+DWORD __stdcall EQ_SendGuideRate(DWORD motor_id, DWORD trackrate, DWORD guiderate,
+DWORD guidedir, DWORD hemisphere, DWORD direction)</span><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+</span><span style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;Function
+name&nbsp;&nbsp;&nbsp; :</span><strong><span style='font-family:Verdana;
+color:#B8E5FD'> EQ_SendCustomTrackRate()</span></strong><span style='font-size:
+10.0pt;font-family:Verdana;color:#B8E5FD'><br>
+</span><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Adjust the RA/DEC rotation trackrate based on a given speed adjustment offset<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+000 - Success<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+001 - Comport Not available<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+003 - COM Timeout Error<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+004 - Motor still busy<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+010 - Cannot Execute command at the current state<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+011 - Motor not initialized<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+999 - Invalid Parameter</span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: DOUBLE motor_id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - RA Motor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - DEC Motor<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+trackrate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - Sidreal<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - Lunar<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+02 - Solar<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+trackoffset<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0 - 300<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+trackdir<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - Positive<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - Negative<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+hemisphere (used for DEC Motor)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - North<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - South<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+direction (used for DEC Motor)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - Forward(+)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - Reverse(-)</span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_SendCustomTrackRate
+(motor_id As Long, trackrate As Long, trackoffset As Long, trackdir As Long,
+hemisphere As Long, direction As Long) As Long<br>
+DWORD __stdcall EQ_SendCustomTrackRate(DWORD motor_id, DWORD trackrate, DWORD
+trackoffset, DWORD trackdir, DWORD hemisphere, DWORD direction)</span><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:10.0pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;Function name&nbsp;&nbsp;&nbsp; : </span><strong><span
+style='font-family:Verdana;color:#B8E5FD'>EQ_MotorStop()</span></strong><span
+style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'><br>
+</span><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Stop RA/DEC Motor<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+000 - Success<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+001 - Comport Not available<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+003 - COM Timeout Error<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+010 - Cannot execute command at the current stepper controller state<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+011 - Motor not initialized<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+999 - Invalid Parameter<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+motor_id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - RA Motor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - DEC Motor</span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_MotorStop
+(value As Long) As Long<br>
+DWORD __stdcall EQ_MotorStop(DWORD motor_id)</span><span style='font-size:8.0pt;
+font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><br>
+</span><span style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;Function
+name&nbsp;&nbsp;&nbsp; : </span><strong><span style='font-family:Verdana;
+color:#B8E5FD'>EQ_GetTotal360microstep()</span></strong><span style='font-size:
+10.0pt;font-family:Verdana;color:#B8E5FD'><br>
+</span><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Get RA/DEC Motor Total 360 degree microstep counts<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Double - Stepper Counter
+Values<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0 - 16777215&nbsp; Valid Count Values<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0x1000000 - Mount Not available<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0x3000000 - Invalid Parameter<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+motor_id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - RA Motor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - DEC Motor</span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_GetTotal360microstep
+(value As Long) As Long<br>
+DWORD __stdcall EQ_GetTotal360microstep(DWORD motor_id)</span><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:10.0pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;Function name&nbsp;&nbsp;&nbsp; : </span><strong><span
+style='font-family:Verdana;color:#B8E5FD'>EQ_GetMountVersion()</span></strong><span
+style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'><br>
+</span><span style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>&nbsp;</span><span
+style='font-size:7.5pt;color:#B8E5FD'>Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Get Mounts Firmware version<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Double - Mounts Firmware
+Version</span><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0x1000000 - Mount Not available</span><span style='font-size:8.0pt;font-family:
+Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_GetMountVersion
+() As Long<br>
+DWORD __stdcall EQ_GetMountVersion()</span><span style='font-size:8.0pt;
+font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:10.0pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;Function name&nbsp;&nbsp;&nbsp; : </span><strong><span
+style='font-family:Verdana;color:#B8E5FD'>EQ_GetMountStatus()</span></strong><span
+style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'><br>
+</span><span style='font-size:7.5pt;color:#B8E5FD'>&nbsp;Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Get Mounts Firmware version<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : Double - Mount Status<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0 - Not Connected<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+1 - Connected</span><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_GetMountStatus
+() As Long<br>
+DWORD __stdcall EQ_GetMountStatus()</span><span style='font-size:8.0pt;
+font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:10.0pt;font-family:
+Verdana;color:#B8E5FD'>&nbsp;Function name&nbsp;&nbsp;&nbsp;</span><span
+style='font-family:Verdana;color:#B8E5FD'> : <strong>EQ_SetAutoguiderPortRate()</strong><b><br>
+</b></span><span style='font-size:10.0pt;font-family:Verdana;color:#B8E5FD'>&nbsp;</span><span
+style='font-size:7.5pt;color:#B8E5FD'>Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+: Sets RA/DEC AUTOGUIDEPORT rate<br>
+&nbsp;Return type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE - Stepper Counter
+Values<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+000 - Success<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+001 - Comport Not available<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+003 - COM Timeout Error<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+999 - Invalid Parameter<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : motor_id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - RA Motor<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - DEC Motor<br>
+&nbsp;Argument&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : DOUBLE
+guideportrate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+00 - 0.25x<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+01 - 0.50x<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+02 - 0.75x<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+03 - 1.00x</span><span style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:7.5pt;color:#B8E5FD'>EQ_SetAutoguiderPortRate
+(motor_id As Long, guideportrate As Long) As Long<br>
+DWORD __stdcall EQ_SetAutoguiderPortRate(DWORD motor_id, DWORD portguiderate</span><span
+style='font-size:7.5pt;font-family:Verdana;color:#B8E5FD'>)</span><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'>&nbsp;<o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><strong><span style='font-size:18.0pt;
+font-family:Verdana;color:#B8E5FD'>DISCLAIMER:</span></strong><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'>&nbsp; You can use the information on this site COMPLETELY AT
+YOUR OWN RISK.<br>
+&nbsp; The modification steps and other information on this site is provided<br>
+&nbsp; to you &quot;AS IS&quot; and WITHOUT WARRANTY OF ANY KIND, express,
+statutory,<br>
+&nbsp; implied or otherwise, including without limitation any warranty of<br>
+&nbsp; merchantability or fitness for any particular or intended purpose.<br>
+&nbsp; In no event the author will&nbsp; be liable for any direct, indirect,<br>
+&nbsp; punitive, special, incidental or consequential damages or loss of any<br>
+&nbsp; kind whether or not the author&nbsp; has been advised of the possibility<br>
+&nbsp; of such loss.<o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'>&nbsp;<strong> </strong></span><strong><span style='font-size:
+18.0pt;font-family:Verdana;color:#B8E5FD'>WARNING:</span></strong><span
+style='font-size:8.0pt;font-family:Verdana;color:#B8E5FD'><o:p></o:p></span></p>
+
+<p style='border:none;mso-border-top-alt:solid black .75pt;padding:0in;
+mso-padding-alt:0in 0in 0in 0in'><span style='font-size:8.0pt;font-family:Verdana;
+color:#B8E5FD'>&nbsp; Circuit modifications implemented on your setup could
+invalidate<br>
+&nbsp; any warranty that you may have with your product. Use this<br>
+&nbsp; information at your own risk. The modifications involve direct<br>
+&nbsp; access to the stepper motor controls of your mount. Any
+&quot;mis-control&quot;<br>
+&nbsp; or &quot;mis-command&quot;&nbsp; / &quot;invalid parameter&quot; or
+&quot;garbage&quot; data sent to the<br>
+&nbsp; mount could accidentally activate the stepper motors and allow it to<br>
+&nbsp; rotate &quot;freely&quot; damaging any equipment connected to your
+mount.<br>
+&nbsp; It is also possible that any garbage or invalid data sent to the mount<br>
+&nbsp; could cause its firmware to generate mis-steps pulse sequences to the<br>
+&nbsp; motors causing it to overheat. Make sure that you perform the<br>
+&nbsp; modifications and testing while there is no physical &quot;load&quot; or<br>
+&nbsp; dangling wires on your mount. Be sure to disconnect the power once<br>
+&nbsp; this event happens or if you notice any unusual sound coming from<br>
+&nbsp; the motor assembly.<o:p></o:p></span></p>
+
+</div>
+
+<p class=MsoNormal><![if !supportEmptyParas]>&nbsp;<![endif]><o:p></o:p></p>
+
+</div>
+
+</body>
+
+</html>

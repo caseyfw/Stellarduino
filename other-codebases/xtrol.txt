@@ -1,0 +1,100 @@
+CONTROLLING HOME-BUILT SCOPES USING GUIDE 4.0 OR 5.0
+
+   Over the last year,  interest in using Guide to control home-built
+telescopes has increased greatly.  There are two ways currently provided
+for doing this: the "LX-200 clone" method,  and the "DOS IACA" (Inter-
+Application Communications Area) method.
+
+   Both systems work through Guide's LX-200 control system.  The only
+difference between them (as far as Guide is concerned) is that in the case
+of the LX-200,  commands are sent to and read from a serial port,  in ASCII;
+in the case of the DOS IACA system,  positions are written to and read from
+a region in memory,  in binary form.
+
+METHOD 1:  LX-200 CLONE
+
+   The first method uses the existing LX-200 hookup.  The most common way to
+do this involves using an older PC (an 8086 is easily up to the task),  hooked
+via serial port to the computer running Guide.  Guide sends and receives
+LX-200 commands over the serial port in the normal way,  and the cheap PC
+receives and sends commands,  emulating the LX-200.  It processes the
+commands into a form usable by the telescope (usually sending commands
+directly to stepper motors).
+
+   This system has many advantages.  Foremost is the fact that it gives you
+an "LX-200 clone";  any software that supports the LX-200 (most astronomy
+software,  these days) will also support your telescope.  The chief drawback
+is the need for two computers.  Granted,  the second computer need not
+even have a monitor or a hard drive.  But it's still not a desirable thing
+to keep around.
+
+   The LX-200 can understand a long list of commands.  Out of that list,
+Guide uses only a few:  those to slew to a particular RA/dec,  and to read
+the RA/dec where the telescope is pointed.  You may find a need to implement
+only one or the other (for example,  if your system provides encoders,  but
+no stepper motors).
+
+   The LX-200 accepts data at 9600 baud,  no parity,  one stop bit.
+
+   TO GO TO A PARTICULAR RA/DEC:  The LX-200 expects to receive a 30-byte
+command that looks like:
+
+#:Sr 12:34.5##:Sd -67!42##:MS#
+
+   This would slew the scope to an RA of 12h 34.5m,  and a declination of
+-67 degrees,  42 minutes.  (The ! is really an ASCII 223,  but I can't put
+that in an e-mail message.)  The "Sr" part means "set right ascension",  the
+"Sd" part means "set declination",  and the "MS" means "slew the telescope".
+
+   When the LX-200 gets this message,  it sends one byte in reply.  A 48
+(ASCII '0') means the scope was slewed.  A 49 (ASCII '1') means the
+object was below the horizon.  A 50 (ASCII '2') means it was too close to
+the horizon to be seen anyway.
+
+   TO FIND THE RA/DEC WHERE THE SCOPE IS POINTED:  If you send the LX-200
+the ten-byte command
+
+#:GD##:GR#
+
+   It then sends back a 15-byte string.  If you were still pointed at the
+RA/dec I mentioned above,  the string would look like this:
+
+-67!42#12:34.5#
+
+   Again,  the ! represents an ASCII 224.
+
+   You _could_ use this system.  I know of a few people who have hooked up
+cheap PCs to receive the LX-200 commands from good PCs running Guide.  The
+cheap PC then interprets the LX-200 commands and produces commands the
+homemade telescope understood.
+
+METHOD 2: DOS IACA METHOD
+
+   The DOS Inter-Application Communication Area (IACA) contains 16 bytes
+in low memory (from 0000:04f0 through 0000:04ff).  Guide can use this area
+to communicate with other DOS programs in general and telescope control
+programs in particular.
+
+   This system is currently used by Mel Bartel's ALTAZ system.  Guide runs
+in one DOS shell under Windows (or OS/2),  and ALTAZ in another DOS shell.
+One can hotkey from one program to the other.  ALTAZ stores the telescope
+position in eight bytes in the IACA,  which Guide reads whenever you use
+the SLEW GUIDE option in the LX-200 menu.  Going in the opposite direction,
+whenever you use the SLEW LX-200 option in Guide's LX-200 menu,  Guide stores
+the current screen center (in RA/declination) in the remaining eight bytes
+of the IACA;  ALTAZ (or your software) can then read that position and act
+accordingly.
+
+   The method works as follows.  The sixteen bytes are treated as four
+signed long integers,  at positions 4f0, 4f4, 4f8,  and 4fc.  These values
+contain:
+
+   At 4f0:  Guide's RA (in ten-millionths of an RA hour)
+   At 4f4:  Guide's declination (in ten-millionths of a degree)
+   At 4f8:  The scope's RA (in ten-millionths of an RA hour)
+   At 4fc:  The scope's declination (in ten-millionths of a degree)
+
+   From Guide's viewpoint,  you have one remaining task:  to inform Guide that
+it should use the IACA,  rather than the (default) LX-200 system.  To do
+this,  hit Shift-F10.  You'll be asked to "Enter scope system #:";  enter 3.
+You need do this only once;  Guide will store this datum for future use.
