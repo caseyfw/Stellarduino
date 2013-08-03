@@ -92,6 +92,29 @@ class Stellarduino {
         return array($alt,$az);
     }
     
+    /*
+     * array getRADec(double $alt, double $az, double $lat, double $long)
+     * 
+     * Calculate the Right Ascension and Declination of a point at given alt az vector from coordinates.
+     * Returns an array containing calculated RA and Dec values as HMS and DMS objects.
+     */
+    public static function getRADec($alt, $az, $lat, $long) {
+        /*DEC = asin(cos(AZIM)*cos(LAT)*cos(ALT) + sin(LAT)*sin(ALT)) 
+        RA = 180 degrees - atan2(sin(AZIM)*cos(ALT)*cos(LST) + 
+                                 + cos(LAT)*sin(ALT)*sin(LST) - 
+                                 - cos(AZIM)*sin(LAT)*cos(ALT)*sin(LST), 
+                                 cos(AZIM)*sin(LAT)*cos(ALT)*cos(LST) + 
+                                 + sin(AZIM)*cos(ALT)*sin(LST) - 
+                                 - cos(LAT)*sin(ALT)*cos(LST)) 
+        */
+        
+        $dec = rad2deg(self::dasin(self::dcos($az) * self::dcos($lat) * self::dcos($alt) + self::dsin($lat) * self::dsin($alt)));
+        
+        return $dec;
+        
+        // return array(HMS ra, DMS dec);
+    }
+    
     private static function dsin($deg) { return sin(deg2rad($deg)); }
     private static function dcos($deg) { return cos(deg2rad($deg)); }
     private static function dasin($deg) { return asin(deg2rad($deg)); }
@@ -105,11 +128,34 @@ class DMS {
     private $s;
     private $hemisphere; // north/east = 1, south/west = -1
     
-    public function __construct($d, $m, $s, $hemisphere) {
+    public function __construct() {
+    }
+    
+    public static function withDMS($d, $m, $s, $hemisphere) {
+        $instance = new self();
+        $instance->createByDMS($d, $m, $s, $hemisphere);
+        return $instance;
+    }
+    
+    protected function createByDMS($d, $m, $s, $hemisphere) {
         $this->d = abs($d);
         $this->m = $m;
         $this->s = $s;
         $this->hemisphere = ($hemisphere === 'n' || $hemisphere === 'e' ? 1 : -1);
+    }
+    
+    public static function withDecimal($degrees) {
+        $instance = new self();
+        $instance->createByDecimal($degrees);
+        return $instance;
+    }
+    
+    protected function createByDecimal($degrees) {
+        $this->hemisphere = $degrees > 0 ? '1' : '-1';
+        $degrees = abs($degrees);
+        $this->d = floor($degrees);
+        $this->m = floor(($degrees - $this->d) * 60);
+        $this->s = ($degrees - $this->d - $this->m / 60) * 3600;
     }
     
     public function getDecimalDeg() {
