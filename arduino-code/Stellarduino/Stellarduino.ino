@@ -18,6 +18,15 @@
 //#include "RTClib.h"
 //#include <SoftwareSerial.h>
 
+#define WAITING_FOR_START 1
+#define WAITING_FOR_END 2
+#define START_CHAR ':'
+#define END_CHAR '#'
+#define GET_RA "GR"
+#define GET_DEC "GD"
+#define CHANGE_PRECISION "U"
+
+
 // some types
 typedef struct {
   float time;
@@ -30,6 +39,7 @@ typedef struct {
 
 //RTC_DS1307 RTC;
 
+// some function prototypes
 void fillVectorWithT(float* v, float e, float az);
 void fillVectorWithC(float* v, Star star, float initialTime);
 void fillStarWithCVector(float* star, float* v);
@@ -59,6 +69,7 @@ float thirdCVector[3];
 float obsTVector[3];
 float obsCVector[3];
 
+// final observed star coordinates
 float obs[2];
 
 // matricies
@@ -71,6 +82,12 @@ float inverseTransformMatrix[9];
 // encoders
 Encoder altEncoder(2, 4);
 Encoder azEncoder(3, 5);
+
+// state and Autostar protocol command buffers
+int state;
+String command;
+char character;
+boolean highPrecision;
 
 // display
 LiquidCrystal lcd(6, 7, 8, 9, 10, 11);
@@ -120,11 +137,11 @@ void setup()
 
   Serial.println("Inverse Transform matrix:");
   printMatrix(inverseTransformMatrix); */
+
+  clearScreen();  
   
-  lcd.clear();
-  lcd.print("RA: ");
-  lcd.setCursor(0, 1);
-  lcd.print("Dec:  ");
+  state = WAITING_FOR_START;
+  highPrecision = false;
 }
 
 void loop()
@@ -165,7 +182,7 @@ void loop()
   
   // if there's a serial request waiting, process it
   if (Serial.available()) {
-    processSerialMessage(obs);
+    processSerial();
   }
 }
 
@@ -362,49 +379,67 @@ void calculateTransforms() {
   invertMatrix(inverseTransformMatrix);
 }
 
-void processSerialMessage(float* star) {
-  String request;
-  String response;
-  delay(10); // chill for a bit to wait for the buffer to fill
-
-  while(Serial.available()) {
-    request += (char)Serial.read();
+void processSerial()
+{
+  character = Serial.read();
+  if (state == WAITING_FOR_START)
+  {
+    if (START_CHAR == character)
+    {
+      state = WAITING_FOR_END;
+      command = "";
+      lcd.setCursor(15,0);
+      lcd.print((char)126);
+    }
+  } else if (state == WAITING_FOR_END)
+  {
+    if (END_CHAR == character)
+    {
+      lcd.setCursor(15,0);
+      lcd.print((char)127);
+      processCommand();
+      state = WAITING_FOR_START;
+      lcd.setCursor(15,0);
+      lcd.print(" ");
+    } else
+    {
+      command += character;
+    }
   }
-  
-  request.trim();
-  
-  /*
-  Serial.print("Received request: '");
-  Serial.print(request);
-  Serial.println("'");
+}
 
-  Serial.print("Request length: '");
-  Serial.print(sizeof(request));
-  Serial.println("'");
-  */
-  
-  if (request == "#:GR#") response = rad2hm(star[0]);
-  if (request == ":GR#") response = rad2hm(star[0]);
-  if (request == "#:U##:GR#") response = rad2hm(star[0]);
-  if (request == "#:GD#") response = rad2dm(star[1]);
-  if (request == ":GD#") response = rad2dm(star[1]);
-  if (request == "#:U##:GD#") response = rad2dm(star[1]);
-  
-  Serial.print(response + "#");
-  
-  /*
-  Serial.print("Responded with: '");
-  Serial.print(response);
-  Serial.println("'");
-  */
+void processCommand()
+{
+  if (command == GET_RA)
+  {
+    Serial.print("#" + rad2hm(obs[0]) + "#");
+    lcd.setCursor(15,1);
+    lcd.print('R');
+  } else if (command == GET_DEC)
+  {
+    Serial.print("#" + rad2dm(obs[1]) + "#");
+    lcd.setCursor(15,1);
+    lcd.print('D');
+  } else if (command == CHANGE_PRECISION)
+  {
+    highPrecision = !highPrecision;
+    clearScreen();
+    lcd.setCursor(15,1);
+    lcd.print('P');
+  }
 }
 
 String rad2hm(float rad) {
   if (rad < 0) rad = rad + 2.0 * M_PI;
   float hours = rad * 24.0 / (2.0 * M_PI);
   float minutes = (hours - floor(hours)) * 60.0;
-  float minfrac = (minutes - floor(minutes)) * 10.0;
-  return padding((String)int(floor(hours)), 2) + ":" + padding((String)int(floor(minutes)), 2) + "." + (String)int(floor(minfrac));
+
+  if (highPrecision)
+  {
+    return padding((String)int(floor(hours)), 2) + ":" + padding((String)int(floor(minutes)), 2) + ":" + (String)int(floor((minutes - floor(minutes)) * 60.0));
+  } else {
+    return padding((String)int(floor(hours)), 2) + ":" + padding((String)int(floor(minutes)), 2) + "." + (String)int(floor((minutes - floor(minutes)) * 10.0));
+  }
 }
 
 String rad2dm(float rad) {
@@ -412,7 +447,14 @@ String rad2dm(float rad) {
   float minutes = (degs - floor(degs)) * 60.0;
   String sign = "+";
   if (rad < 0) sign = "-";
-  return sign + padding((String)int(floor(degs)), 2) + "*" + padding((String)int(floor(minutes)), 2);
+  
+  if (highPrecision)
+  {
+    return sign + padding((String)int(floor(degs)), 2) + "*" + padding((String)int(floor(minutes)), 2) + ":" + (String)int(floor((minutes - floor(minutes)) * 60.0));
+  }
+  {
+    return sign + padding((String)int(floor(degs)), 2) + "*" + padding((String)int(floor(minutes)), 2);
+  }
 }
 
 String padding(String str, int length) {
@@ -421,4 +463,11 @@ String padding(String str, int length) {
   }
   return str;
 }
-    
+
+void clearScreen()
+{
+  lcd.clear();
+  lcd.print("RA: ");
+  lcd.setCursor(0, 1);
+  lcd.print("Dec:  ");
+}
