@@ -141,7 +141,7 @@ void setup()
   clearScreen();  
   
   state = WAITING_FOR_START;
-  highPrecision = false;
+  highPrecision = true;
 }
 
 void loop()
@@ -436,7 +436,7 @@ String rad2hm(float rad) {
 
   if (highPrecision)
   {
-    return padding((String)int(floor(hours)), 2) + ":" + padding((String)int(floor(minutes)), 2) + ":" + (String)int(floor((minutes - floor(minutes)) * 60.0));
+    return padding((String)int(floor(hours)), 2) + ":" + padding((String)int(floor(minutes)), 2) + ":" + padding((String)int(floor((minutes - floor(minutes)) * 60.0)), 2);
   } else {
     return padding((String)int(floor(hours)), 2) + ":" + padding((String)int(floor(minutes)), 2) + "." + (String)int(floor((minutes - floor(minutes)) * 10.0));
   }
@@ -450,7 +450,7 @@ String rad2dm(float rad) {
   
   if (highPrecision)
   {
-    return sign + padding((String)int(floor(degs)), 2) + "*" + padding((String)int(floor(minutes)), 2) + ":" + (String)int(floor((minutes - floor(minutes)) * 60.0));
+    return sign + padding((String)int(floor(degs)), 2) + "*" + padding((String)int(floor(minutes)), 2) + ":" + padding((String)int(floor((minutes - floor(minutes)) * 60.0)), 2);
   }
   {
     return sign + padding((String)int(floor(degs)), 2) + "*" + padding((String)int(floor(minutes)), 2);
