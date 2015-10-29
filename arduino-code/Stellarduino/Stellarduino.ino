@@ -8,15 +8,17 @@
  * Version: 0.3 Meade Autostar
  * Author: Casey Fulton, casey AT caseyfulton DOT com
  * License: MIT, http://opensource.org/licenses/MIT
+ *
+ * Choosing new alignment stars
+ * Feel free to replace the alignment stars below with ones that are visible
+ * from your location/season.
  */
-
 
 #include <Encoder.h>
 #include <LiquidCrystal.h>
 #include <math.h>
 //#include <Wire.h>
 //#include "RTClib.h"
-//#include <SoftwareSerial.h>
 
 #define WAITING_FOR_START 1
 #define WAITING_FOR_END 2
@@ -26,8 +28,9 @@
 #define GET_DEC "GD"
 #define CHANGE_PRECISION "U"
 
+#define DEBUG false
 
-// some types
+// Structure for storing star data.
 typedef struct {
   float time;
   float ra;
@@ -35,6 +38,7 @@ typedef struct {
   float alt;
   float az;
   String name;
+  float vmag;
 } Star;
 
 //RTC_DS1307 RTC;
@@ -51,11 +55,8 @@ const float siderealFraction = 1.002737908;
 float initialTime;
 
 // alignment stars
-//Star aAnd = {5.619669, 0.034470, 0.506809, 1.732239, 1.463808, "α And"};
-//Star aUmi = {5.659376, 0.618501, 1.557218, 5.427625, 0.611563, "α Umi"};
-
-Star rigelK = {0.0, 3.837912142664153, -1.0618086768405413, 0.0, 0.0, "Rigel K"};
-Star arcturus = {0.0, 3.733528341608887, 0.33479293562700113, 0.0, 0.0, "Arcturus"};
+Star alignmentStar1 = {0.0, 3.83797175293031, -1.06177589858756,  0.0, 0.0, "Rigel K",  -0.01};
+Star alignmentStar2 = {0.0, 3.73352834160889,  0.334797783763812, 0.0, 0.0, "Arcturus", -0.04};
 
 // calculation vectors
 float firstTVector[3];
@@ -92,9 +93,6 @@ boolean highPrecision;
 // display
 LiquidCrystal lcd(6, 7, 8, 9, 10, 11);
 
-// OMFG Software Serial, need to ditch this in favour of USB port!
-//SoftwareSerial mySerial(13, 12); // RX, TX
-
 // encoder steps per revolution of scope (typically 4 * CPR * gearing)
 const int altSPR = 10000;
 const int azSPR = 10000;
@@ -109,7 +107,6 @@ const int OK_BTN = A0;
 
 void setup()
 {
-  //mySerial.begin(9600);
   Serial.begin(9600);
   lcd.begin(16, 2);
   lcd.clear();
@@ -118,28 +115,30 @@ void setup()
   // setup encoders
   altMultiplier = 2.0 * M_PI / ((float)altSPR);
   azMultiplier = -2.0 * M_PI / ((float)azSPR);
-  
+
   doAlignment();
-  
+
   calculateTransforms();
-  
-/*  Serial.println("Telescope matrix:");
-  printMatrix(telescopeMatrix);
 
-  Serial.println("Celestial matrix:");
-  printMatrix(celestialMatrix);
+  if (DEBUG) {
+    Serial.println("Telescope matrix:");
+    printMatrix(telescopeMatrix);
 
-  Serial.println("Inverse Celestial matrix:");
-  printMatrix(inverseMatrix);
-  
-  Serial.println("Transform matrix:");
-  printMatrix(transformMatrix); 
+    Serial.println("Celestial matrix:");
+    printMatrix(celestialMatrix);
 
-  Serial.println("Inverse Transform matrix:");
-  printMatrix(inverseTransformMatrix); */
+    Serial.println("Inverse Celestial matrix:");
+    printMatrix(inverseMatrix);
 
-  clearScreen();  
-  
+    Serial.println("Transform matrix:");
+    printMatrix(transformMatrix);
+
+    Serial.println("Inverse Transform matrix:");
+    printMatrix(inverseTransformMatrix);
+  }
+
+  clearScreen();
+
   state = WAITING_FOR_START;
   highPrecision = true;
 }
@@ -148,38 +147,36 @@ void loop()
 {
   altT = altMultiplier * altEncoder.read();
   azT = azMultiplier * azEncoder.read();
-  
+
   fillVectorWithT(obsTVector, altT, azT);
   fillMatrixWithProduct(obsCVector, inverseTransformMatrix, obsTVector, 3, 3, 1);
-  fillStarWithCVector(obs, obsCVector); // OMFG THIS IS PROBABLY INCORRECT
+  fillStarWithCVector(obs, obsCVector);
 
+  if (DEBUG) {
+    Serial.println("Observed vector:");
+    printVector(obsTVector);
+    Serial.println("Transformed celestial vector:");
+    printVector(obsCVector);
+    Serial.println("Celestial coordinates:");
+    Serial.print(obs[0]);
+    Serial.print(",");
+    Serial.println(obs[1]);
 
-/*
-  Serial.println("Observed vector:");
-  printVector(obsTVector);
-  Serial.println("Transformed celestial vector:");
-  printVector(obsCVector);
-  Serial.println("Celestial coordinates:");
-  Serial.print(obs[0]);
-  Serial.print(",");
-  Serial.println(obs[1]);
-
-  while(Serial.available() == 0)
-  {
-    // do nothing
+    // wait for input from serial before continuing
+    while(Serial.available() == 0)
+    {
+      // do nothing
+    }
+    Serial.read();
   }
-  Serial.read();
-*/
 
   lcd.setCursor(5,0);
-//  lcd.print(obs[0] * rad2deg, 3);
   lcd.print(rad2hm(obs[0]));
   lcd.print(" ");
   lcd.setCursor(5,1);
-//  lcd.print(obs[1] * rad2deg, 3);
   lcd.print(rad2dm(obs[1]));
   lcd.print(" ");
-  
+
   // if there's a serial request waiting, process it
   if (Serial.available()) {
     processSerial();
@@ -200,7 +197,6 @@ void fillVectorWithC(float* v, Star star, float initialTime) {
 
 void fillStarWithCVector(float* star, float* v)
 {
-  // OMFG THIS IS PROBABLY INCORRECT
   star[0] = atan(v[1] / v[0]) + siderealFraction * ((float)millis() / 86400000.0f * 2.0 * M_PI - initialTime);
   if(v[0] < 0) star[0] = star[0] + M_PI;
   star[1] = asin(v[2]);
@@ -235,7 +231,7 @@ void invertMatrix(float* m) {
   int pivrow;
   int pivrows[9];
   int i,j,k;
-  
+
   for(k = 0; k < 3; k++) {
     temp = 0;
     for(i = k; i < 3; i++) {
@@ -263,7 +259,7 @@ void invertMatrix(float* m) {
     for(j = 0; j < 3; j++) {
       m[k * 3 + j] = m[k * 3 + j] * temp;
     }
-    
+
     for(i = 0; i < 3; i++) {
       if(i != k) {
         temp = m[i* 3 + k];
@@ -274,7 +270,7 @@ void invertMatrix(float* m) {
       }
     }
   }
-  
+
   for(k = 2; k >= 0; k--) {
     if(pivrows[k] != k) {
       for(i = 0; i < 3; i++) {
@@ -308,72 +304,72 @@ void copyMatrix(float* recipient, float* donor)
 void doAlignment() {
   // set initial time - actual time not necessary, just the difference!
   initialTime = (float)millis() / 86400000.0f * 2.0 * M_PI;
-  
+
   // ask user to point scope at first star
   lcd.print("Point: ");
-  lcd.print(rigelK.name);
+  lcd.print(alignmentStar1.name);
   lcd.setCursor(0,1);
   lcd.print("Then press OK");
 
   // wait for button press
   while(digitalRead(OK_BTN) == LOW);
-  rigelK.time = (float)millis() / 86400000.0f * 2.0 * M_PI;
-  rigelK.alt = altMultiplier * altEncoder.read();
-  rigelK.az = azMultiplier * azEncoder.read();
+  alignmentStar1.time = (float)millis() / 86400000.0f * 2.0 * M_PI;
+  alignmentStar1.alt = altMultiplier * altEncoder.read();
+  alignmentStar1.az = azMultiplier * azEncoder.read();
 
   lcd.clear();
   lcd.print("Alt set: ");
-  lcd.print(rigelK.alt * rad2deg, 3);
+  lcd.print(alignmentStar1.alt * rad2deg, 3);
   lcd.setCursor(0,1);
   lcd.print("Az set: ");
-  lcd.print(rigelK.az * rad2deg, 3);
+  lcd.print(alignmentStar1.az * rad2deg, 3);
 
   delay(2000);
 
   // ask user to point scope at second star
   lcd.clear();
   lcd.print("Point: ");
-  lcd.print(arcturus.name);
+  lcd.print(alignmentStar2.name);
   lcd.setCursor(0,1);
   lcd.print("Then press OK");
-  
+
   // wait for button press
   while(digitalRead(OK_BTN) == LOW);
-  arcturus.time = (float)millis() / 86400000.0f * 2.0 * M_PI;
-  arcturus.az = azMultiplier * azEncoder.read();
-  arcturus.alt = altMultiplier * altEncoder.read();
+  alignmentStar2.time = (float)millis() / 86400000.0f * 2.0 * M_PI;
+  alignmentStar2.az = azMultiplier * azEncoder.read();
+  alignmentStar2.alt = altMultiplier * altEncoder.read();
 
   lcd.clear();
   lcd.print("Alt set: ");
-  lcd.print(arcturus.alt * rad2deg, 3);
+  lcd.print(alignmentStar2.alt * rad2deg, 3);
   lcd.setCursor(0,1);
   lcd.print("Az set: ");
-  lcd.print(arcturus.az * rad2deg, 3);
+  lcd.print(alignmentStar2.az * rad2deg, 3);
 
   delay(2000);
 }
 
 void calculateTransforms() {
-  // calculate vectors for aAnd and aUmi
-  fillVectorWithT(firstTVector, rigelK.alt, rigelK.az);
-  fillVectorWithT(secondTVector, arcturus.alt, arcturus.az);
-  
+  // calculate vectors for alignment stars
+  fillVectorWithT(firstTVector, alignmentStar1.alt, alignmentStar1.az);
+  fillVectorWithT(secondTVector, alignmentStar2.alt, alignmentStar2.az);
+
   // calculate third's vectors
   fillVectorWithProduct(thirdTVector, firstTVector, secondTVector);
 
-  // calculate celestial vectors for aAnd and aUmi
-  fillVectorWithC(firstCVector, rigelK, initialTime);
-  fillVectorWithC(secondCVector, arcturus, initialTime);
-  
+  // calculate celestial vectors for alignment stars
+  fillVectorWithC(firstCVector, alignmentStar1, initialTime);
+  fillVectorWithC(secondCVector, alignmentStar2, initialTime);
+
   // calculate third's vector
   fillVectorWithProduct(thirdCVector, firstCVector, secondCVector);
-  
+
   fillMatrixWithVectors(telescopeMatrix, firstTVector, secondTVector, thirdTVector);
-  fillMatrixWithVectors(celestialMatrix, firstCVector, secondCVector, thirdCVector);  
-  
+  fillMatrixWithVectors(celestialMatrix, firstCVector, secondCVector, thirdCVector);
+
   copyMatrix(inverseMatrix, celestialMatrix);
   invertMatrix(inverseMatrix);
-  
+
   fillMatrixWithProduct(transformMatrix, telescopeMatrix, inverseMatrix, 3, 3, 3);
   copyMatrix(inverseTransformMatrix, transformMatrix);
   invertMatrix(inverseTransformMatrix);
@@ -384,7 +380,7 @@ void processSerial()
   character = Serial.read();
   if (state == WAITING_FOR_START)
   {
-    if (START_CHAR == character)
+    if (character == START_CHAR)
     {
       state = WAITING_FOR_END;
       command = "";
@@ -393,7 +389,7 @@ void processSerial()
     }
   } else if (state == WAITING_FOR_END)
   {
-    if (END_CHAR == character)
+    if (character == END_CHAR)
     {
       lcd.setCursor(15,0);
       lcd.print((char)127);
@@ -447,7 +443,7 @@ String rad2dm(float rad) {
   float minutes = (degs - floor(degs)) * 60.0;
   String sign = "+";
   if (rad < 0) sign = "-";
-  
+
   if (highPrecision)
   {
     return sign + padding((String)int(floor(degs)), 2) + "*" + padding((String)int(floor(minutes)), 2) + ":" + padding((String)int(floor((minutes - floor(minutes)) * 60.0)), 2);
@@ -470,4 +466,20 @@ void clearScreen()
   lcd.print("RA: ");
   lcd.setCursor(0, 1);
   lcd.print("Dec:  ");
+}
+
+void printMatrix(float* m)
+{
+  // apparently I deleted the print matrix function, so I'm adding this back in
+  // so debug doesn't die.
+
+  // TODO: rewrite printMatrix.
+}
+
+void printVector(float* v)
+{
+  // apparently I deleted the print vector function, so I'm adding this back in
+  // so debug doesn't die.
+
+  // TODO: rewrite printVector.
 }
