@@ -19,6 +19,7 @@
 #include <math.h>
 //#include <Wire.h>
 //#include "RTClib.h"
+ #include "AlignmentStars.h"
 
 #define WAITING_FOR_START 1
 #define WAITING_FOR_END 2
@@ -55,7 +56,7 @@ const float siderealFraction = 1.002737908;
 float initialTime;
 
 // alignment stars
-Star alignmentStar1 = {0.0, 3.83797175293031, -1.06177589858756,  0.0, 0.0, "Rigel K",  -0.01};
+AlignmentStar alignmentStar1 = ;
 Star alignmentStar2 = {0.0, 3.73352834160889,  0.334797783763812, 0.0, 0.0, "Arcturus", -0.04};
 
 // calculation vectors
