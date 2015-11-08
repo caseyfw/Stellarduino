@@ -12,11 +12,11 @@
 class ObservedStar : public Star
 {
 public:
-	ObservedStar(char[] name, float ra, float dec, float alt, float az, float time);
+  ObservedStar(String name, float ra, float dec, float alt, float az, float time);
 private:
-	float alt;
-	float az;
-	float time;
+  float alt;
+  float az;
+  float time;
 };
 
 #endif

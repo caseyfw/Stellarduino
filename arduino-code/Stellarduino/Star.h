@@ -11,11 +11,11 @@
 class Star
 {
 public:
-	Star(char[] name, float ra, float dec);
+  Star(String name, float ra, float dec);
 private:
-	String name;
-	float ra;
-	float dec;
+  String name;
+  float ra;
+  float dec;
 };
 
 #endif
