@@ -15,38 +15,56 @@
 #include "EEPROMAnything.h"
 
 #define FLOAT_LENGTH 4 // 4 bytes per float number
-#define NAME_LENGTH 9 // 8 bytes per star, 1 for the null terminator
+#define NAME_LENGTH 8 // 8 bytes per star
 #define TOTAL_LENGTH 20 // 20 bytes per star total
 #define NUM_OF_STARS 50 // 20 x 50 = 1000 bytes, roughly the size of the Arduino Uno EEPROM
 
 struct CatalogueStar
 {
-  char name[NAME_LENGTH - 1];
+  char name[NAME_LENGTH + 1]; // Add 1 for the null terminator '/0'
   float vmag;
   float ra;
   float dec;
 };
 
-CatalogueStar star = { 'Arcturus', -0.04, 3.73352834160889,   0.334797783763812 };
+CatalogueStar star;
 
+char name[NAME_LENGTH + 1];
+float* vmag;
+float* ra;
+float* dec;
 
 void setup()
 {
   Serial.begin(9600);
+  
+  Serial.println("Ready to read star catalogue from EEPROM. Continue? (y/n)");
 
-  Serial.print("Length of catalogueStar in bytes: ");
-  Serial.println(sizeof(star));
+  while (!Serial.available());
+  if (Serial.read() != 'y')
+  {
+    while(true);
+  }
 
   Serial.println("### Beginning dump of EEPROM.");
   Serial.println("No  Name      Right Ascension  Declination  Magnitude");
   
-  /*
-  for (int i = 0; i < NUM_OF_STARS; i++)
+  for (int i = 0; i < 5; i++)
   {
-    writeStar(i * TOTAL_LENGTH, stars[i].name, stars[i].brightness, stars[i].ra, stars[i].dec);
-    EEPROM.read(i * TOTAL_LENGTH, 8);
+    for (int c = 0; c < NAME_LENGTH; c++)
+    {
+      // fetch name
+      name[c] = EEPROM.read(i * TOTAL_LENGTH + c);
+      if (name[c] == (char) 0xFF) {
+        name[c] = '\0';
+        break;
+      }
+    }
+
+    Serial.print((String) (i + 1));
+    Serial.print(name);
+    Serial.println();
   }
-  */
 
   Serial.println("### Finished.");
 }

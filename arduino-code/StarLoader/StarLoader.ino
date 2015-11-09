@@ -28,7 +28,7 @@
 
 struct CatalogueStar
 {
-  char name[NAME_LENGTH + 1];
+  char name[NAME_LENGTH + 1]; // Add 1 for the null terminator '/0'
   float vmag;
   float ra;
   float dec;
@@ -92,7 +92,6 @@ boolean writeStar(int startIndex, char name[NAME_LENGTH + 1], float vmag, float 
   // for each character in the name, until null termination char or max length is reached...
   for (int i = 0; name[i] != '\0' && i < NAME_LENGTH; i++)
   {
-    Serial.println((String) (startIndex + i) + ": " + (String) name[i]);
     EEPROM.write(startIndex + i, (byte) name[i]);
   }
   
@@ -120,11 +119,11 @@ boolean writeFloat(int startIndex, float number)
 void setup()
 {
   Serial.begin(9600);
+
   Serial.println("Ready to upload star catalogue to EEPROM. Continue? (y/n)");
 
-  while(!Serial.available());
-  
-  if(Serial.read() != 'y')
+  while (!Serial.available());
+  if (Serial.read() != 'y')
   {
     while(true);
   }
@@ -134,7 +133,7 @@ void setup()
   for (int i = 0; i < NUM_OF_STARS; i++)
   {
     Serial.print((String) (i + 1) + "/" + (String) NUM_OF_STARS + " ");
-    Serial.write(stars[i].name);
+    Serial.print(stars[i].name);
     Serial.println();
     
     writeStar(i * TOTAL_LENGTH, stars[i].name, stars[i].vmag, stars[i].ra, stars[i].dec);
