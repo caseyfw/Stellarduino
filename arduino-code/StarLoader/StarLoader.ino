@@ -4,15 +4,15 @@
  * EEPROM. Press button connected to A0 to begin uploading.
  *
  * Each star is represented using 20 bytes. The first 8 bytes is used for the
- * star's name. The next 4 is a float representing apparent brightness, the
+ * star's name. The next 4 is a float representing apparent vmag, the
  * last 8 are two floats, representing right ascension and declination in
- * radians. The stars are uploaded in order of brightness, with the first
+ * radians. The stars are uploaded in order of vmag, with the first
  * bring the brightest (Sirius, -1.46) and the last being the dimmest (Debeb K,
  * 2.04).
  *
  * This star catalogue is designed to be consumed by Stellarduino, in order to
  * provide automatic alignment star selection, based on their visibility and
- * brightness.
+ * vmag.
  *
  * Version: 0.3 Meade Autostar
  * Author: Casey Fulton, casey AT caseyfulton DOT com
@@ -20,29 +20,21 @@
  */
 
 #include <EEPROM.h>
-#include <LiquidCrystal.h>
 
 #define FLOAT_LENGTH 4 // 4 bytes per float number
-#define NAME_LENGTH 9 // 8 bytes per star, 1 for the null terminator
+#define NAME_LENGTH 8 // 8 bytes per star
 #define TOTAL_LENGTH 20 // 20 bytes per star total
 #define NUM_OF_STARS 50 // 20 x 50 = 1000 bytes, roughly the size of the Arduino Uno EEPROM
 
-
-// display
-LiquidCrystal lcd(6, 7, 8, 9, 10, 11);
-
-// buttons
-const int OK_BTN = A0;
-
-typedef struct
+struct CatalogueStar
 {
-  char name[NAME_LENGTH];
-  float brightness;
+  char name[NAME_LENGTH + 1];
+  float vmag;
   float ra;
   float dec;
-} catalogueStar;
+};
 
-catalogueStar stars[] = {
+CatalogueStar stars[] = {
   { "Sirius",   -1.46, 1.76779309390854,  -0.291751177018097 },
   { "Canopus",  -0.72, 1.67530518796327,  -0.919715793748845 },
   { "Arcturus", -0.04, 3.73352834160889,   0.334797783763812 },
@@ -95,59 +87,19 @@ catalogueStar stars[] = {
   { "Deneb K",   2.04, 0.190182710825649,  0.924791792990062 }
 };
 
-void setup()
-{
-  Serial.begin(9600);
-  pinMode(OK_BTN, INPUT);
-  lcd.begin(16, 2);
-  lcd.clear();
-  lcd.print("Press OK to");
-  lcd.setCursor(0, 1);
-  lcd.print("start upload");
-  
-  // wait for button press
-  while(digitalRead(OK_BTN) == LOW);
-  
-  lcd.clear();
-  lcd.print("Uploading:");
-
-  for (int i = 0; i < NUM_OF_STARS; i++)
-  {
-    // clear bottom line of LCD
-    lcd.setCursor(0, 1);
-    lcd.print("                ");
-    
-    lcd.setCursor(0, 1);
-    lcd.print((String) (i + 1) + "/" + (String) NUM_OF_STARS + " " + String(stars[i].name));
-    
-    writeStar(i * TOTAL_LENGTH, stars[i].name, stars[i].brightness, stars[i].ra, stars[i].dec);
-    
-    
-    delay(200);
-  }
-
-  lcd.clear();
-  lcd.print("Upload success!");
-}
-
-void loop()
-{
-  // do nothing
-}
-
-boolean writeStar(int startIndex, char name[NAME_LENGTH], float brightness, float ra, float dec)
+boolean writeStar(int startIndex, char name[NAME_LENGTH + 1], float vmag, float ra, float dec)
 {
   // for each character in the name, until null termination char or max length is reached...
-  for (int i = 0; name[i] != '\0' && i < NAME_LENGTH - 1; i++)
+  for (int i = 0; name[i] != '\0' && i < NAME_LENGTH; i++)
   {
     Serial.println((String) (startIndex + i) + ": " + (String) name[i]);
     EEPROM.write(startIndex + i, (byte) name[i]);
   }
   
   // split floats into four bytes and write to EEPROM
-  writeFloat(startIndex + NAME_LENGTH - 1, brightness);
-  writeFloat(startIndex + NAME_LENGTH - 1 + FLOAT_LENGTH, ra);
-  writeFloat(startIndex + NAME_LENGTH - 1 + FLOAT_LENGTH * 2, dec);
+  writeFloat(startIndex + NAME_LENGTH, vmag);
+  writeFloat(startIndex + NAME_LENGTH + FLOAT_LENGTH, ra);
+  writeFloat(startIndex + NAME_LENGTH + FLOAT_LENGTH * 2, dec);
   
 }
 
@@ -157,13 +109,44 @@ boolean writeFloat(int startIndex, float number)
   byte* b = (byte*) &number;
   for (int i = 0; i < 4; i++)
   {
-    Serial.print((String) (startIndex + i) + ": ");
-    
     // dereference pointer to get byte value
-    Serial.println(*b, HEX);
     EEPROM.write(startIndex + i, *b);
     
     // increment the byte pointer
     b++;
   }
 }
+
+void setup()
+{
+  Serial.begin(9600);
+  Serial.println("Ready to upload star catalogue to EEPROM. Continue? (y/n)");
+
+  while(!Serial.available());
+  
+  if(Serial.read() != 'y')
+  {
+    while(true);
+  }
+
+  Serial.println("Starting upload.");
+
+  for (int i = 0; i < NUM_OF_STARS; i++)
+  {
+    Serial.print((String) (i + 1) + "/" + (String) NUM_OF_STARS + " ");
+    Serial.write(stars[i].name);
+    Serial.println();
+    
+    writeStar(i * TOTAL_LENGTH, stars[i].name, stars[i].vmag, stars[i].ra, stars[i].dec);
+    
+    delay(200);
+  }
+
+  Serial.print("Upload succeeded!");
+}
+
+void loop()
+{
+  // do nothing
+}
+
