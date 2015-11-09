@@ -1,8 +1,17 @@
-/*
-  MeadeSerial.h - Interface for interacting with Meade telescopes over serial.
-  Created by Casey Fulton, March 31, 2015.
-  Released into the public domain.
-*/
+/**
+ * MeadeSerial.cpp
+ *
+ * Interface for communicating with a PC over serial, implementing the Meade
+ * Autostar protocol.
+ *
+ * See:
+ * http://www.weasner.com/etx/autostar/2010/AutostarSerialProtocol2007oct.pdf
+ *
+ * Version: 0.4 Better Alignment
+ * Author: Casey Fulton, casey AT caseyfulton DOT com
+ * Website: http://www.caseyfulton.com/stellarduino
+ * License: MIT, http://opensource.org/licenses/MIT
+ */
 
 #ifndef MeadeSerial_h
 #define MeadeSerial_h

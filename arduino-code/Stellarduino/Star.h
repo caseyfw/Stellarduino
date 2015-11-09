@@ -1,8 +1,14 @@
-/*
-  Star.h - Basic star class, root class for all stars, used to store alignment stars.
-  Created by Casey Fulton, March 31, 2015.
-  Released into the public domain.
-*/
+/**
+ * Star.h
+ *
+ * Represents a celestial object with known celestial coordinates.
+ *
+ * Version: 0.4 Better Alignment
+ * Author: Casey Fulton, casey AT caseyfulton DOT com
+ * Website: http://www.caseyfulton.com/stellarduino
+ * License: MIT, http://opensource.org/licenses/MIT
+ */
+
 #ifndef Star_h
 #define Star_h
 

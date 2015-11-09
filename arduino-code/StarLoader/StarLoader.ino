@@ -1,37 +1,42 @@
 /**
  * StarLoader.ino
  * This sketch uploads a catalogue of the 50 brightest stars to an Arduino's
- * EEPROM. Press button connected to A0 to begin uploading.
+ * EEPROM.
+ *
+ * WARNING: EEPROM is not like regular flash memory, it has a limited life span,
+ * and will actually "wear out" after ~100,000 erase/write cycles. There is no
+ * advertised limit on the number of times the EEPROM can be read, but
+ * nonetheless some caution is advised when running this sketch.
  *
  * Each star is represented using 20 bytes. The first 8 bytes is used for the
- * star's name. The next 4 is a float representing apparent vmag, the
- * last 8 are two floats, representing right ascension and declination in
- * radians. The stars are uploaded in order of vmag, with the first
- * bring the brightest (Sirius, -1.46) and the last being the dimmest (Debeb K,
- * 2.04).
+ * star's name. The next 4 is a float representing apparent magnitude, the last
+ * 8 are two floats, representing right ascension and declination in decimal
+ * radians. The stars are uploaded in order of vmag, with the first being the
+ * brightest (Sirius, -1.46) and the last being the dimmest (Debeb K, 2.04).
  *
  * This star catalogue is designed to be consumed by Stellarduino, in order to
  * provide automatic alignment star selection, based on their visibility and
- * vmag.
+ * apparent magnitude.
  *
- * Version: 0.3 Meade Autostar
+ * Version: 0.4 Better Alignment
  * Author: Casey Fulton, casey AT caseyfulton DOT com
+ * Website: http://www.caseyfulton.com/stellarduino
  * License: MIT, http://opensource.org/licenses/MIT
  */
 
 #include <EEPROM.h>
 
-#define FLOAT_LENGTH 4 // 4 bytes per float number
-#define NAME_LENGTH 8 // 8 bytes per star
-#define TOTAL_LENGTH 20 // 20 bytes per star total
-#define NUM_OF_STARS 50 // 20 x 50 = 1000 bytes, roughly the size of the Arduino Uno EEPROM
+#define FLOAT_LENGTH 4 // 4 bytes per float number.
+#define NAME_LENGTH 8 // 8 bytes per star.
+#define TOTAL_LENGTH 20 // 20 bytes per star total.
+#define NUM_OF_STARS 50 // 20 x 50 = 1000 bytes, ~ the size of the Uno EEPROM.
 
 struct CatalogueStar
 {
-  char name[NAME_LENGTH + 1]; // Add 1 for the null terminator '/0'
-  float vmag;
-  float ra;
-  float dec;
+  char name[NAME_LENGTH + 1]; // Add 1 for the null terminator '/0'.
+  float vmag; // Apparent magnitude.
+  float ra;   // Right ascension.
+  float dec;  // Declination.
 };
 
 CatalogueStar stars[] = {
@@ -87,30 +92,37 @@ CatalogueStar stars[] = {
   { "Deneb K",   2.04, 0.190182710825649,  0.924791792990062 }
 };
 
-boolean writeStar(int startIndex, char name[NAME_LENGTH + 1], float vmag, float ra, float dec)
+/**
+ * Writes the 20-byte details of a star to EEPROM at given memory offset.
+ */
+boolean writeStar(int offset, char name[NAME_LENGTH + 1], float vmag,
+  float ra, float dec)
 {
-  // for each character in the name, until null termination char or max length is reached...
+  // For each character in the name, until end of string or max length.
   for (int i = 0; name[i] != '\0' && i < NAME_LENGTH; i++)
   {
-    EEPROM.write(startIndex + i, (byte) name[i]);
+    EEPROM.write(offset + i, (byte) name[i]);
   }
-  
-  // split floats into four bytes and write to EEPROM
-  writeFloat(startIndex + NAME_LENGTH, vmag);
-  writeFloat(startIndex + NAME_LENGTH + FLOAT_LENGTH, ra);
-  writeFloat(startIndex + NAME_LENGTH + FLOAT_LENGTH * 2, dec);
-  
+
+  // Split floats into four bytes and write to EEPROM.
+  writeFloat(offset + NAME_LENGTH, vmag);
+  writeFloat(offset + NAME_LENGTH + FLOAT_LENGTH, ra);
+  writeFloat(offset + NAME_LENGTH + FLOAT_LENGTH * 2, dec);
+
 }
 
-boolean writeFloat(int startIndex, float number)
+/**
+ * Writes the details of a star to EEPROM.
+ */
+boolean writeFloat(int offset, float number)
 {
   // cast float pointer to byte pointer
   byte* b = (byte*) &number;
   for (int i = 0; i < 4; i++)
   {
     // dereference pointer to get byte value
-    EEPROM.write(startIndex + i, *b);
-    
+    EEPROM.write(offset + i, *b);
+
     // increment the byte pointer
     b++;
   }
@@ -135,9 +147,9 @@ void setup()
     Serial.print((String) (i + 1) + "/" + (String) NUM_OF_STARS + " ");
     Serial.print(stars[i].name);
     Serial.println();
-    
+
     writeStar(i * TOTAL_LENGTH, stars[i].name, stars[i].vmag, stars[i].ra, stars[i].dec);
-    
+
     delay(200);
   }
 

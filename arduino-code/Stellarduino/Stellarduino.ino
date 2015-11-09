@@ -1,17 +1,24 @@
 /**
  * Stellarduino.ino
- * The base Arduino sketch that makes up the heart of Stellarduino
+ * The base Arduino sketch that makes up the heart of Stellarduino.
  *
  * This software is pretty dodgy, but accomplishes PushTo so long as you
  * preselect alignment stars below.
  *
- * Version: 0.3 Meade Autostar
- * Author: Casey Fulton, casey AT caseyfulton DOT com
- * License: MIT, http://opensource.org/licenses/MIT
+ * Software Requirements
+ * TLB's Encoder library: http://www.pjrc.com/teensy/td_libs_Encoder.html
  *
- * Choosing new alignment stars
- * Feel free to replace the alignment stars below with ones that are visible
- * from your location/season.
+ * Hardware Requirements
+ * To run this program, you'll need an Arduino Uno or better, a 16x2 LCD,
+ * display, a push button, and a 220k ohm resistor.
+ *
+ * For more information, including a setup guide, head to
+ * www.caseyfulton.com/stellarduino
+ *
+ * Version: 0.4 Better Alignment
+ * Author: Casey Fulton, casey AT caseyfulton DOT com
+ * Website: http://www.caseyfulton.com/stellarduino
+ * License: MIT, http://opensource.org/licenses/MIT
  */
 
 #include <Encoder.h>
@@ -40,8 +47,9 @@ const float siderealFraction = 1.002737908;
 float initialTime;
 
 // alignment stars
+// TODO: Deprecate this to move to EEPROM star catalogue.
 // Arcturus
-SimpleStar alignmentStar1 = 
+SimpleStar alignmentStar1 =
 {
   0.0,
   alignmentStars[2].ra,
@@ -52,7 +60,7 @@ SimpleStar alignmentStar1 =
   alignmentStars[2].vmag
 };
 // Rigel K
-SimpleStar alignmentStar2 = 
+SimpleStar alignmentStar2 =
 {
   0.0,
   alignmentStars[3].ra,
@@ -93,6 +101,7 @@ Encoder azEncoder(3, 5);
 MeadeSerial meade(obs, false, 9600);
 
 // display
+// TODO: Make provision for I2C LCD.
 LiquidCrystal lcd(6, 7, 8, 9, 10, 11);
 
 // encoder steps per revolution of scope (typically 4 * CPR * gearing)
@@ -105,6 +114,7 @@ float altMultiplier, azMultiplier, altT, azT;
 const float rad2deg = 57.29577951308232;
 
 // buttons
+// TODO: Move all of the consts that users may want to edit up to the top.
 const int OK_BTN = A0;
 
 void setup()
