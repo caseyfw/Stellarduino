@@ -9,50 +9,55 @@
  * License: MIT, http://opensource.org/licenses/MIT
  */
 
+#ifndef StellarduinoUtilities_h
+#define StellarduinoUtilities_h
+
 #include <math.h>
 #include <avr/pgmspace.h>
 #include "Arduino.h"
 
-#ifndef AlignmentStarStruct
-#define AlignmentStarStruct
+// Constants.
 
-// Structure for storing alignment star data.
-// TODO: Deprecate this in favour of the Star classes.
-struct AlignmentStar {
+// Solar day (24h00m00s) / sidereal day (23h56m04.0916s).
+const float siderealFraction = 1.002737908;
+const float rad2deg = 57.29577951308232;
+
+// Structures.
+struct Star {
   String name;
-  float vmag;
   float ra;
   float dec;
 };
-
-#endif
-
-#ifndef SimpleStarStruct
-#define SimpleStarStruct
-
-// Structure for storing star data.
-// TODO: Deprecate this in favour of the Star classes.
-struct SimpleStar {
+struct ObservedStar {
   String name;
-  float vmag;
   float ra;
   float dec;
   float alt;
   float az;
   float time;
 };
-
-#endif
-
-#ifndef StellarduinoUtilities_h
-#define StellarduinoUtilities_h
-
-class StellarduinoUtilities
-{
-public:
-  static String rad2hm(float rad, boolean highPrecision = false);
-  static String rad2dm(float rad, boolean highPrecision = false);
-  static String padding(String str, int length);
+struct CatalogueStar {
+  String name;
+  float ra;
+  float dec;
+  float vmag;
 };
+
+// Utility functions.
+String rad2hm(float rad, boolean highPrecision = false);
+String rad2dm(float rad, boolean highPrecision = false);
+String padding(String str, int length);
+
+void fillVectorWithT(float* v, float e, float az);
+void fillVectorWithC(float* v, ObservedStar star, float initialTime);
+void fillVectorWithProduct(float* v, float* a, float* b);
+
+void fillMatrixWithVectors(float* m, float* a, float* b, float* c);
+void fillMatrixWithProduct(float* m, float* a, float* b, int aRows, int aCols, int bCols);
+
+void fillStarWithCVector(float* star, float* v, float initialTime);
+
+void copyMatrix(float* recipient, float* donor);
+void invertMatrix(float* m);
 
 #endif

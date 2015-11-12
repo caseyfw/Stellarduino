@@ -17,7 +17,7 @@
 #define MeadeSerial_h
 
 #include "Arduino.h"
-#include "StellarduinoUtils.h"
+#include "StellarduinoUtilities.h"
 
 #define WAITING_FOR_START 1
 #define WAITING_FOR_END 2
@@ -30,7 +30,7 @@
 class MeadeSerial
 {
 public:
-  MeadeSerial(float obs[2], boolean highPrecision = true, unsigned int baud = 9600);
+  void begin(float obs[2], boolean highPrecision = true, unsigned int baud = 9600);
   boolean available();
   void processSerial();
 private:
