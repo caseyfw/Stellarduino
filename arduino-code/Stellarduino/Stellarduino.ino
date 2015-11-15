@@ -30,7 +30,7 @@
 #include "StellarduinoUtilities.h"
 #include "MeadeSerial.h"
 
-#define DEBUG false
+#define DEBUG true
 
 // Buttons.
 #define OK_BTN A0
@@ -91,7 +91,17 @@ Encoder azEncoder(3, 5);
 float altMultiplier;
 float azMultiplier;
 
+// Telescope coords in radians.
 float altT, azT;
+
+// Viewing location
+float latV, longV;
+
+// Viewing coords in radians.
+float altV, azV;
+
+// Current time UTC.
+unsigned long time;
 
 void setup()
 {
@@ -104,6 +114,9 @@ void setup()
   pinMode(OK_BTN, INPUT);
   pinMode(UP_BTN, INPUT);
   pinMode(DOWN_BTN, INPUT);
+
+  lcd.print("Starting algnmnt");
+  Serial.begin(9600);
 
   if (rtc.begin() && rtc.isrunning()) {
     autoSelectAlignmentStars();
@@ -183,7 +196,23 @@ void loop()
  */
 void autoSelectAlignmentStars()
 {
+  lcd.setCursor(0,1);
+  lcd.print(rtc.now().unixtime());
   
+  // determine utc time (gmt)
+  
+  // determine viewing lat/long
+
+
+  // foreach catalogue star
+    // calculate alt/az
+
+
+  while(true) {
+      lcd.setCursor(0,1);
+      lcd.print(rtc.now().unixtime());
+      delay(10);
+  }
 }
 
 void manuallySelectAlignmentStars()
