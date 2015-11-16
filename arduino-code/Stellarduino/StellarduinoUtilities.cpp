@@ -170,3 +170,54 @@ void copyMatrix(float* recipient, float* donor)
   }
 }
 
+void loadCatalogueStar(int i, CatalogueStar star)
+{
+  // Fetch name
+  for (int c = 0; c < NAME_LENGTH; c++)
+  {
+    star.name[c] = EEPROM.read(i * TOTAL_LENGTH + c);
+    if (star.name[c] == (char) 0xFF) {
+      star.name[c] = '\0';
+      break;
+    }
+  }
+
+  // Fetch
+}
+
+/**
+ * Reads a float value from the EEPROM.
+ */
+string readStringFromEEPROM(int offset) {
+  // Make a temporary string to hold the value.
+  String data;
+  // make a pointer to byte, and initialise it to point to the first byte of the float
+  byte *p = (byte*)(void*)&value;
+  for (int i = 0; i < sizeof(value); i++)
+  {
+    // assign whatever byte is in EEPROM to the byte p points to
+    *p = EEPROM.read(offset + i);
+    // move p up to the next byte
+    p++;
+  }
+  return value;
+}
+
+
+/**
+ * Reads a float value from the EEPROM.
+ */
+float readFloatFromEEPROM(int offset) {
+  // Make a regular four-byte float to hold the value
+  float value;
+  // make a pointer to byte, and initialise it to point to the first byte of the float
+  byte *p = (byte*)(void*)&value;
+  for (int i = 0; i < sizeof(value); i++)
+  {
+    // assign whatever byte is in EEPROM to the byte p points to
+    *p = EEPROM.read(offset + i);
+    // move p up to the next byte
+    p++;
+  }
+  return value;
+}

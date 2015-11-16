@@ -15,14 +15,21 @@
 #include <math.h>
 #include <avr/pgmspace.h>
 #include "Arduino.h"
+#include <EEPROM.h>
 
 // Constants.
+
+// EEPROM star catalogue elements.
+#define FLOAT_LENGTH 4 // 4 bytes per float number
+#define NAME_LENGTH 8 // 8 bytes per star
+#define TOTAL_LENGTH 20 // 20 bytes per star total
 
 // Solar day (24h00m00s) / sidereal day (23h56m04.0916s).
 const float siderealFraction = 1.002737908;
 const float rad2deg = 57.29577951308232;
 
 // Structures.
+// TODO: Consider changing the Strings here to char arrays.
 struct Star {
   String name;
   float ra;
@@ -60,4 +67,7 @@ void fillStarWithCVector(float* star, float* v, float initialTime);
 void copyMatrix(float* recipient, float* donor);
 void invertMatrix(float* m);
 
+void loadCatalogueStar(int i, CatalogueStar star);
+String readStringFromEEPROM(int offset, int maxLength = NAME_LENGTH);
+String readFloatFromEEPROM(int offset);
 #endif
