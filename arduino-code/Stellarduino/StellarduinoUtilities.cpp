@@ -170,3 +170,16 @@ void copyMatrix(float* recipient, float* donor)
   }
 }
 
+void loadCatalogueStar(int i, CatalogueStar star)
+{
+  // Fetch name
+  for (int c = 0; c < NAME_LENGTH; c++)
+    {
+      star.name[c] = EEPROM.read(i * TOTAL_LENGTH + c);
+      if (star.name[c] == (char) 0xFF) {
+        star.name[c] = '\0';
+        break;
+      }
+    }
+
+}

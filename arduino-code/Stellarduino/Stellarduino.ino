@@ -41,12 +41,19 @@
 #define ALT_SPR 10000
 #define AZ_SPR 10000
 
+// The number of stars in the EEPROM catalogue
+#define CATALOGUE_STARS 50
+
 // Viewing location expressed as radians.
 float viewingCoords[] = {2.4190437966, -0.6096260544};
 
 // Alignment stars.
+// TODO: Refactor this into an array.
 ObservedStar alignmentStar1;
 ObservedStar alignmentStar2;
+
+// Temporary location to put catalogue stars while calculating
+CatalogueStar catalogueStar;
 
 // Meade serial connection.
 MeadeSerial meade;
@@ -100,15 +107,16 @@ float latV, longV;
 // Viewing coords in radians.
 float altV, azV;
 
-// Current time UTC.
-unsigned long time;
+// Sidereal time when the sketch started, expressed in radians.
+// TODO: This should replace initialTime, or at least inform it.
+float initialSiderealTime;
 
 void setup()
 {
   // Calculate encoder multipliers based on steps per revolution.
   altMultiplier = 2.0 * M_PI / (float)ALT_SPR;
   azMultiplier = -2.0 * M_PI / (float)AZ_SPR;
-  
+
   lcd.begin(16, 2);
   lcd.clear();
   pinMode(OK_BTN, INPUT);
@@ -198,14 +206,24 @@ void autoSelectAlignmentStars()
 {
   lcd.setCursor(0,1);
   lcd.print(rtc.now().unixtime());
-  
+
   // determine utc time (gmt)
-  
+  // Real-time clock provides UTC time as unix timestamp
+  rtc.now().unixtime();
+
   // determine viewing lat/long
 
+  // calculate initial sidereal time
+
+  // calculate local sidereal time
 
   // foreach catalogue star
+  for (int i = 0; i < CATALOGUE_STARS; i++)
+  {
+    loadCatalogueStar(i, catalogueStar);
+  }
     // calculate alt/az
+    // if alt/az
 
 
   while(true) {
@@ -231,7 +249,7 @@ void manuallySelectAlignmentStars()
     -1.06177589858756,
     -0.01
   };
-}  
+}
 
 void doAlignment() {
   // Set initial time - actual time not necessary, just the difference!

@@ -15,8 +15,13 @@
 #include <math.h>
 #include <avr/pgmspace.h>
 #include "Arduino.h"
+#include <EEPROM.h>
 
 // Constants.
+
+#define FLOAT_LENGTH 4 // 4 bytes per float number
+#define NAME_LENGTH 8 // 8 bytes per star
+#define TOTAL_LENGTH 20 // 20 bytes per star total
 
 // Solar day (24h00m00s) / sidereal day (23h56m04.0916s).
 const float siderealFraction = 1.002737908;
@@ -59,5 +64,7 @@ void fillStarWithCVector(float* star, float* v, float initialTime);
 
 void copyMatrix(float* recipient, float* donor);
 void invertMatrix(float* m);
+
+void loadCatalogueStar(int i, CatalogueStar star);
 
 #endif
