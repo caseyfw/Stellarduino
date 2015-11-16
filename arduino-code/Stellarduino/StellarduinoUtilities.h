@@ -27,6 +27,7 @@
 // Solar day (24h00m00s) / sidereal day (23h56m04.0916s).
 const float siderealFraction = 1.002737908;
 const float rad2deg = 57.29577951308232;
+const float milliRadsPerDay = 542867210.54;
 
 // Structures.
 // TODO: Consider changing the Strings here to char arrays.
@@ -41,7 +42,7 @@ struct ObservedStar {
   float dec;
   float alt;
   float az;
-  float time;
+  float time; // NOTE: Not sure if this is necessary.
 };
 struct CatalogueStar {
   String name;
@@ -54,7 +55,18 @@ struct CatalogueStar {
 String rad2hm(float rad, boolean highPrecision = false);
 String rad2dm(float rad, boolean highPrecision = false);
 String padding(String str, int length);
+void die();
 
+// Star catalogue EEPROM functions.
+void loadCatalogueStar(int i, CatalogueStar star);
+float loadNameFromEEPROM(int offset, char* name);
+float loadFloatFromEEPROM(int offset, float* value);
+
+// Coordinate geometry functions.
+float getJulianDate(int year, int month, int day, float hour);
+float getSiderealTime(float julianDate, float hour, float longitude = 0.0);
+
+// Matrix translation functions.
 void fillVectorWithT(float* v, float e, float az);
 void fillVectorWithC(float* v, ObservedStar star, float initialTime);
 void fillVectorWithProduct(float* v, float* a, float* b);
@@ -64,10 +76,8 @@ void fillMatrixWithProduct(float* m, float* a, float* b, int aRows, int aCols, i
 
 void fillStarWithCVector(float* star, float* v, float initialTime);
 
+// Generic matrix functions.
 void copyMatrix(float* recipient, float* donor);
 void invertMatrix(float* m);
 
-void loadCatalogueStar(int i, CatalogueStar star);
-String readStringFromEEPROM(int offset, int maxLength = NAME_LENGTH);
-String readFloatFromEEPROM(int offset);
 #endif
