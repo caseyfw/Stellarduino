@@ -55,6 +55,7 @@ String rad2hm(float rad, boolean highPrecision = false);
 String rad2dm(float rad, boolean highPrecision = false);
 String padding(String str, int length);
 void die();
+int choose(char* question, char** answers);
 
 // Star catalogue EEPROM functions.
 void loadCatalogueStar(int i, CatalogueStar star);

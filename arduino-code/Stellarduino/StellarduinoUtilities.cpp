@@ -110,6 +110,11 @@ float loadFloatFromEEPROM(int offset, float* value)
  */
 float getJulianDate(int year, int month, int day, float hour)
 {
+  Serial.print("Date: " + (String)year + "-" + padding((String)month, 2) + "-" +
+    padding((String)day, 2) + " ");
+  Serial.print(hour, 5);
+  Serial.println();
+
   float gregorian;
 
   // Massage year/month to work with Gregorian approximation formula below.
@@ -121,8 +126,12 @@ float getJulianDate(int year, int month, int day, float hour)
   // Approximate the difference between Gregorian and Julian dates.
   gregorian = 2 - floor(year / 100.0) + floor(floor(year / 100.0) / 4.0);
 
+  Serial.print("Gregorian: ");
+  Serial.print(gregorian, 5);
+  Serial.println();
+
   // Julian date approximation.
-  return floor(365.25 * year) + floor(30.6001 * month) + day + hour / 24.0 +
+  return (float)floor(365.25 * year) + floor(30.6001 * (month + 1)) + day + hour / 24.0 +
     1720994.5 + gregorian;
 }
 

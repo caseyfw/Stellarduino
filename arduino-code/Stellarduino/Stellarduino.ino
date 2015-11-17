@@ -22,6 +22,7 @@
  * License: MIT, http://opensource.org/licenses/MIT
  */
 
+#include <EEPROM.h>
 #include <Encoder.h>
 #include <LiquidCrystal.h>
 #include <math.h>
@@ -29,8 +30,6 @@
 #include "RTClib.h"
 #include "StellarduinoUtilities.h"
 #include "MeadeSerial.h"
-#include <EEPROM.h>
-
 
 #define DEBUG true
 
@@ -70,9 +69,6 @@ RTC_DS1307 rtc;
 
 // Real Time Clock date/time object - may come from being manually entered.
 DateTime initialDate;
-
-// Millis when datetime was retrieved from RTC. Probably insignificant.
-float rtcOffset;
 
 // Initial time as radians.
 float initialTime;
@@ -126,7 +122,6 @@ void setup()
   // Set initial datetime object.
   if (rtc.begin() && rtc.isrunning()) {
     initialDate = rtc.now();
-    rtcOffset = millis();
   }
 
   lcd.begin(16, 2);
@@ -135,9 +130,15 @@ void setup()
   pinMode(UP_BTN, INPUT);
   pinMode(DOWN_BTN, INPUT);
 
+  if (DEBUG) {
+    Serial.begin(9600);
+    delay(5000);
+  }
+
   lcd.print("Starting algnmnt");
 
   if (rtc.begin() && rtc.isrunning()) {
+    Serial.println("Starting alignment process.");
     autoSelectAlignmentStars();
   } else {
     manuallySelectAlignmentStars();
@@ -148,7 +149,6 @@ void setup()
   calculateTransforms();
 
   if (DEBUG) {
-    Serial.begin(9600);
     Serial.println("Telescope matrix:");
     printMatrix(telescopeMatrix);
 
@@ -166,7 +166,7 @@ void setup()
   }
 
   clearScreen();
-  meade.begin(obs, false, 9600);
+//  meade.begin(obs, false, 9600);
 }
 
 void loop()
@@ -215,22 +215,23 @@ void loop()
  */
 void autoSelectAlignmentStars()
 {
-  // determine utc time (gmt)
-  // Real-time clock provides UTC time as unix timestamp
-  // rtc.now().unixtime();
-
-  // determine viewing lat/long
-  // viewingCoords;
-
   // Hours, minutes and seconds in decimal since program started running.
-  float hour = initialDate.hour() + initialDate.minute() / 60.0 + (initialDate.second() - rtcOffset /
-    1000.0) / 3600.0;
+  float hour = initialDate.hour() + initialDate.minute() / 60.0 +
+    initialDate.second() / 3600.0;
 
   // Calculate approximate Julian date.
   float julian = getJulianDate(initialDate.year(), initialDate.month(), initialDate.day(), hour);
 
+  Serial.print("Julian: ");
+  Serial.print(julian, 5);
+  Serial.println();
+
   // Calculate initial local sidereal time.
   initialSiderealTime = getSiderealTime(julian, hour, viewingCoords[1]);
+
+  Serial.print("Initial sidereal time: ");
+  Serial.print(initialSiderealTime, 5);
+  Serial.println();
 
   // Alignment star counter.
   int n = 0;
