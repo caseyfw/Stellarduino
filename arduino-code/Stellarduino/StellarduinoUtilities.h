@@ -30,14 +30,13 @@ const float rad2deg = 57.29577951308232;
 const float milliRadsPerDay = 542867210.54;
 
 // Structures.
-// TODO: Consider changing the Strings here to char arrays.
 struct Star {
-  String name;
+  char name[NAME_LENGTH + 1];
   float ra;
   float dec;
 };
 struct ObservedStar {
-  String name;
+  char name[NAME_LENGTH + 1];
   float ra;
   float dec;
   float alt;
@@ -45,7 +44,7 @@ struct ObservedStar {
   float time; // NOTE: Not sure if this is necessary.
 };
 struct CatalogueStar {
-  String name;
+  char name[NAME_LENGTH + 1];
   float ra;
   float dec;
   float vmag;
@@ -65,6 +64,8 @@ float loadFloatFromEEPROM(int offset, float* value);
 // Coordinate geometry functions.
 float getJulianDate(int year, int month, int day, float hour);
 float getSiderealTime(float julianDate, float hour, float longitude = 0.0);
+void celestialToEquatorial(float ra, float dec, float latV, float longV,
+  float lst, float* obs);
 
 // Matrix translation functions.
 void fillVectorWithT(float* v, float e, float az);

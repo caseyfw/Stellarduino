@@ -66,7 +66,7 @@ void die()
 void loadCatalogueStar(int i, CatalogueStar star)
 {
   int offset = i * TOTAL_LENGTH;
-  loadNameFromEEPROM(offset, &star.name);
+  loadNameFromEEPROM(offset, star.name);
   loadFloatFromEEPROM(offset + NAME_LENGTH, &star.ra);
   loadFloatFromEEPROM(offset + NAME_LENGTH + FLOAT_LENGTH, &star.ra);
   loadFloatFromEEPROM(offset + NAME_LENGTH + FLOAT_LENGTH + FLOAT_LENGTH,
@@ -102,7 +102,6 @@ float loadFloatFromEEPROM(int offset, float* value)
     // Move p up to the next byte.
     p++;
   }
-  return value;
 }
 
 /**
@@ -134,7 +133,7 @@ float getSiderealTime(float julian, float hour, float longitude)
   // Approximation of Julian centuries since 1900.
   s = (julian - 2415020) / 36525.0;
 
-  s = 6.6460656 + 2400.051 * s + 0.00002581 * (s ^ 2);
+  s = 6.6460656 + 2400.051 * s + 0.00002581 * s * s;
   // This is basically MOD 24.
   s = (s / 24.0 - floor(s / 24.0)) * 24;
   s = s + hour * 1.002737908;
@@ -148,6 +147,17 @@ float getSiderealTime(float julian, float hour, float longitude)
 
   // Return in radians.
   return s / 12.0 * M_PI;
+}
+
+void celestialToEquatorial(float ra, float dec, float latV, float longV,
+  float lst, float* obs)
+{
+  float ha = lst - ra;
+  if (ha < 0) {
+    ha += 2 * M_PI;
+  }
+  obs[0] = asin(sin(dec) * sin(latV) + cos(dec) * cos(latV) * cos(ha));
+  obs[1] = acos((sin(dec) - sin(obs[0]) * sin(latV)) / (cos(obs[0]) * cos(latV)));
 }
 
 void fillVectorWithT(float* v, float e, float az)
