@@ -3,9 +3,6 @@
  * This sketch displays the contents of an Arduino's EEPROM assuming it has
  * been modified by StarLoader.ino.
  *
- * Unlike StarLoader, this sketch uses only the serial interface to dump the
- * contents of the EEPROM - no LCD or buttons are needed.
- *
  * Version: 0.4 Better Alignment
  * Author: Casey Fulton, casey AT caseyfulton DOT com
  * Website: http://www.caseyfulton.com/stellarduino
@@ -29,11 +26,6 @@ struct CatalogueStar
 };
 
 CatalogueStar star;
-
-char name[NAME_LENGTH + 1];
-float* vmag;
-float* ra;
-float* dec;
 
 /**
  * Adds padding to the beginning or end of a string, using the optionally
@@ -109,7 +101,7 @@ void setup()
   }
 
   Serial.println("### Beginning dump of EEPROM.");
-  Serial.println("No  Name      Magnitude  Right Ascension  Declination");
+  Serial.println("No  Name      Right Ascension  Declination  Magnitude");
 
   for (int i = 0; i < NUM_OF_STARS; i++) {
     for (int c = 0; c < NAME_LENGTH; c++) {
@@ -122,20 +114,19 @@ void setup()
     }
 
     // fetch floats from next 12 bytes
-    star.vmag = readFloat(i * TOTAL_LENGTH + NAME_LENGTH);
-    star.ra   = readFloat(i * TOTAL_LENGTH + NAME_LENGTH + FLOAT_LENGTH);
-    star.dec  = readFloat(i * TOTAL_LENGTH + NAME_LENGTH + FLOAT_LENGTH * 2);
+    star.ra   = readFloat(i * TOTAL_LENGTH + NAME_LENGTH);
+    star.dec  = readFloat(i * TOTAL_LENGTH + NAME_LENGTH + FLOAT_LENGTH);
+    star.vmag = readFloat(i * TOTAL_LENGTH + NAME_LENGTH + FLOAT_LENGTH * 2);
 
     // print the star's details with padding so it looks nice
     Serial.print(padding((String) (i + 1), 2) + "  ");
     Serial.print(padding(star.name, 10, ' ', false));
+    Serial.print(padding(rad2hms(star.ra), 17, ' ', false));
+    Serial.print(padding(rad2dms(star.dec), 13, ' ', false));
     if (star.vmag > 0) {
       Serial.print(" ");
     }
-    Serial.print(star.vmag);
-    Serial.print("      ");
-    Serial.print(padding(rad2hms(star.ra), 17, ' ', false));
-    Serial.println(rad2dms(star.dec));
+    Serial.println(star.vmag);
   }
 
   Serial.println("### Finished.");

@@ -8,11 +8,25 @@
  * advertised limit on the number of times the EEPROM can be read, but
  * nonetheless some caution is advised when running this sketch.
  *
- * Each star is represented using 20 bytes. The first 8 bytes is used for the
- * star's name. The next 4 is a float representing apparent magnitude, the last
- * 8 are two floats, representing right ascension and declination in decimal
- * radians. The stars are uploaded in order of vmag, with the first being the
- * brightest (Sirius, -1.46) and the last being the dimmest (Debeb K, 2.04).
+ * Star Catalogue Schema
+ *
+ * Each star is represented using 20 bytes. The first 8 bytes are used for the
+ * star's name. The next 8 are two single-precision floats, representing right
+ * ascension and declination in decimal radians. The last 4 bytes are another
+ * float representing apparent magnitude. The stars are uploaded in order of
+ * vmag, with the first being the brightest (Sirius, -1.46) and the last being
+ * the dimmest (Debeb K, 2.04).
+ *
+ * Name                     RA           Dec          Magnitude
+ * S  i  r  i  u  s  \0 ?   1.767793     -0.291751    -1.460000
+ * 53 69 72 69 75 73 00 ??  3f e2 47 0b  be 95 60 69  bf ba e1 48
+ * A  r  c  t  u  r  u  s   3.733528     0.334798     -0.040000
+ * 41 72 63 74 75 72 75 73  40 6e f2 21  3e ab 6a 9d  bd 23 d7 0a
+ *
+ * Note how Sirius, being only 6 characters long is terminated by a null
+ * terminator byte, whereas Arcturus at 8 characters long doesn't have one.
+ * This allows for maximum space usage, but can result in weird side effects if
+ * not accounted for when reading from the catalogue.
  *
  * This star catalogue is designed to be consumed by Stellarduino, in order to
  * provide automatic alignment star selection, based on their visibility and
@@ -98,9 +112,14 @@ CatalogueStar stars[] = {
 boolean writeStar(int offset, char name[NAME_LENGTH + 1], float ra, float dec,
   float vmag)
 {
-  // For each character in the name, until end of string or max length.
-  for (int i = 0; name[i] != '\0' && i < NAME_LENGTH; i++) {
+  // For each character in the name, until max length.
+  for (int i = 0; i < NAME_LENGTH; i++) {
     EEPROM.write(offset + i, (byte) name[i]);
+
+    // If current character is the null terminator, break out.
+    if (name[i] == '\0') {
+      break;
+    }
   }
 
   // Split floats into four bytes and write to EEPROM.
@@ -144,8 +163,8 @@ void setup()
     Serial.print(stars[i].name);
     Serial.println();
 
-    writeStar(i * TOTAL_LENGTH, stars[i].name, stars[i].vmag, stars[i].ra,
-      stars[i].dec);
+    writeStar(i * TOTAL_LENGTH, stars[i].name, stars[i].ra,
+      stars[i].dec, stars[i].vmag);
 
     delay(200);
   }
