@@ -135,14 +135,16 @@ void setup()
     delay(5000);
   }
 
-  lcd.print("Starting algnmnt");
-
   if (rtc.begin() && rtc.isrunning()) {
-    Serial.println("Starting alignment process.");
+    Serial.println("Auto selecting stars.");
     autoSelectAlignmentStars();
   } else {
+    Serial.println("Manually selecting stars.");
     manuallySelectAlignmentStars();
   }
+
+  Serial.println("Starting alignment.");
+  lcd.print("Starting algnmnt");
 
   doAlignment();
 
