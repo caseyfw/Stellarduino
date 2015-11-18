@@ -63,8 +63,8 @@ float loadNameFromEEPROM(int offset, char* name);
 float loadFloatFromEEPROM(int offset, float* value);
 
 // Coordinate geometry functions.
-float getJulianDate(int year, int month, int day, float hour);
-float getSiderealTime(float julianDate, float hour, float longitude = 0.0);
+double getJulianDate(int year, int month, int day, double hour);
+float getSiderealTime(double julianDate, float hour, float longitude = 0.0);
 void celestialToEquatorial(float ra, float dec, float latV, float longV,
   float lst, float* obs);
 

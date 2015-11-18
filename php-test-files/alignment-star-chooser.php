@@ -6,12 +6,13 @@ header("Content-type: text/plain; charset=utf-8");
 
 $k = 1.002737908; // solar day (24h00m00s) / sidereal day (23h56m04.0916s)
 
-$lat = dms2rad(27,26,20,'s');
-$long = dms2rad(153,2,2,'e');
+$lat = -0.6096260544;
+$long = 2.4190437966;
 
 // Time of observation
 date_default_timezone_set("Australia/Adelaide");
-$time = new DateTime('now');
+// $time = new DateTime('now');
+$time = new DateTime('2015-11-18 17:55:00');
 
 $stars = array();
 $file = fopen('stars.csv','r');
@@ -36,6 +37,7 @@ echo "Long: ".rad2dms($long)."\n";
 echo "Long: ".rad2hms($long)."\n";
 echo "LST: ".rad2hms($lst)."\n";
 
+die;
 
 $counter = 0;
 // calculate alt az of each alignment star
@@ -119,11 +121,12 @@ function getLST($time, $long) {
         $month = $month + 12;
     }
     $gregorian = 2 - floor($year / 100.0) + floor(floor($year / 100.0) / 4.0);
-    echo "gregorian: " . $gregorian . "\n";
+    echo "Gregorian: " . $gregorian . "\n";
 
     // Julian date approximation
-    $julian = floor(365.25 * $year) + floor(30.6001 * ($month + 1)) + $day + 1720994.5 + $gregorian;
-    echo "Julian: " . $julian . "\n";
+    $julian = floor(365.25 * $year) + floor(30.6001 * ($month + 1)) + $day +
+        1720994.5 + $gregorian;
+    echo "Julian day: " . $julian . "\n";
     $julian = $julian + $hour / 24.0;
     echo "Julian: " . $julian . "\n";
 

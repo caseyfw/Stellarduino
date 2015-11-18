@@ -218,11 +218,15 @@ void loop()
 void autoSelectAlignmentStars()
 {
   // Hours, minutes and seconds in decimal since program started running.
-  float hour = initialDate.hour() + initialDate.minute() / 60.0 +
-    initialDate.second() / 3600.0;
+  // float hour = initialDate.hour() + initialDate.minute() / 60.0 +
+  //   initialDate.second() / 3600.0;
 
   // Calculate approximate Julian date.
-  float julian = getJulianDate(initialDate.year(), initialDate.month(), initialDate.day(), hour);
+  // float julian = getJulianDate(initialDate.year(), initialDate.month(), initialDate.day(), hour);
+
+  // OMFG TEST REMOVE ME
+  double hour = 7 + 25 / 60.0 + 0 / 3600.0;
+  double julian = getJulianDate(2015, 11, 18, hour);
 
   Serial.print("Julian: ");
   Serial.print(julian, 5);

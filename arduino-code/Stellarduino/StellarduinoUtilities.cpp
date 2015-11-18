@@ -108,11 +108,11 @@ float loadFloatFromEEPROM(int offset, float* value)
  * Approximates the Julian date for the current one. Not valid for dates before
  * 1582 AD.
  */
-float getJulianDate(int year, int month, int day, float hour)
+double getJulianDate(int year, int month, int day, double hour)
 {
   Serial.print("Date: " + (String)year + "-" + padding((String)month, 2) + "-" +
     padding((String)day, 2) + " ");
-  Serial.print(hour, 5);
+  Serial.print(hour / 24.0, 8);
   Serial.println();
 
   float gregorian;
@@ -131,18 +131,37 @@ float getJulianDate(int year, int month, int day, float hour)
   Serial.println();
 
   // Julian date approximation.
-  return (float)floor(365.25 * year) + floor(30.6001 * (month + 1)) + day + hour / 24.0 +
+  double julian = floor(365.25 * year) + floor(30.6001 * (month + 1)) + day +
     1720994.5 + gregorian;
+
+  Serial.print("Julian day: ");
+  Serial.print(julian, 5);
+  Serial.println();
+
+  julian = julian + hour / 24.0;
+
+  Serial.print("Julian: ");
+  Serial.print(julian, 5);
+  Serial.println();
+
+  return julian;
 }
 
-float getSiderealTime(float julian, float hour, float longitude)
+float getSiderealTime(double julian, float hour, float longitude)
 {
-  float s;
+  double s;
 
   // Approximation of Julian centuries since 1900.
   s = (julian - 2415020) / 36525.0;
 
+  Serial.print("Centuries: ");
+  Serial.println(s, 9);
+
   s = 6.6460656 + 2400.051 * s + 0.00002581 * s * s;
+
+  Serial.print("Sidereal from centuries: ");
+  Serial.println(s, 9);
+
   // This is basically MOD 24.
   s = (s / 24.0 - floor(s / 24.0)) * 24;
   s = s + hour * 1.002737908;
@@ -155,7 +174,7 @@ float getSiderealTime(float julian, float hour, float longitude)
   if (s > 24) s = s - 24;
 
   // Return in radians.
-  return s / 12.0 * M_PI;
+  return (float)(s / 12.0 * M_PI);
 }
 
 void celestialToEquatorial(float ra, float dec, float latV, float longV,
