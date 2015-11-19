@@ -63,20 +63,19 @@ void die()
   }
 }
 
-void loadCatalogueStar(int i, CatalogueStar star)
+void loadCatalogueStar(int i, CatalogueStar& star)
 {
   int offset = i * TOTAL_LENGTH;
   loadNameFromEEPROM(offset, star.name);
   loadFloatFromEEPROM(offset + NAME_LENGTH, &star.ra);
-  loadFloatFromEEPROM(offset + NAME_LENGTH + FLOAT_LENGTH, &star.ra);
-  loadFloatFromEEPROM(offset + NAME_LENGTH + FLOAT_LENGTH + FLOAT_LENGTH,
-    &star.ra);
+  loadFloatFromEEPROM(offset + NAME_LENGTH + FLOAT_LENGTH, &star.dec);
+  loadFloatFromEEPROM(offset + NAME_LENGTH + FLOAT_LENGTH + FLOAT_LENGTH, &star.vmag);
 }
 
 /**
- * Reads a name (char array) from the EEPROM.
+ * Reads a name (char array) from the EEPROM into the referenced char array.
  */
-float loadNameFromEEPROM(int offset, char* name)
+void loadNameFromEEPROM(int offset, char* name)
 {
   for (int c = 0; c < NAME_LENGTH; c++) {
     name[c] = EEPROM.read(offset + c);
@@ -89,12 +88,12 @@ float loadNameFromEEPROM(int offset, char* name)
 }
 
 /**
- * Reads a float value from the EEPROM.
+ * Reads a float value from the EEPROM into the referenced float.
  */
-float loadFloatFromEEPROM(int offset, float* value)
+void loadFloatFromEEPROM(int offset, float* value)
 {
   // Make pointer to byte, and make it to point to the first byte of the float.
-  byte *p = (byte*)(void*)&value;
+  byte *p = (byte*)value;
 
   for (int i = 0; i < FLOAT_LENGTH; i++) {
     // Assign whatever byte is in EEPROM to the byte p points to.
@@ -108,14 +107,9 @@ float loadFloatFromEEPROM(int offset, float* value)
  * Approximates the Julian date for the current one. Not valid for dates before
  * 1582 AD.
  */
-double getJulianDate(int year, int month, int day, double hour)
+float getJulianDay(int year, int month, int day)
 {
-  Serial.print("Date: " + (String)year + "-" + padding((String)month, 2) + "-" +
-    padding((String)day, 2) + " ");
-  Serial.print(hour / 24.0, 8);
-  Serial.println();
-
-  float gregorian;
+  int gregorian;
 
   // Massage year/month to work with Gregorian approximation formula below.
   if (month < 3) {
@@ -126,41 +120,20 @@ double getJulianDate(int year, int month, int day, double hour)
   // Approximate the difference between Gregorian and Julian dates.
   gregorian = 2 - floor(year / 100.0) + floor(floor(year / 100.0) / 4.0);
 
-  Serial.print("Gregorian: ");
-  Serial.print(gregorian, 5);
-  Serial.println();
-
   // Julian date approximation.
-  double julian = floor(365.25 * year) + floor(30.6001 * (month + 1)) + day +
+  return floor(365.25 * year) + floor(30.6001 * (month + 1)) + day +
     1720994.5 + gregorian;
-
-  Serial.print("Julian day: ");
-  Serial.print(julian, 5);
-  Serial.println();
-
-  julian = julian + hour / 24.0;
-
-  Serial.print("Julian: ");
-  Serial.print(julian, 5);
-  Serial.println();
-
-  return julian;
 }
 
-float getSiderealTime(double julian, float hour, float longitude)
+float getSiderealTime(float julian, float hour, float longitude)
 {
-  double s;
+  float s;
 
   // Approximation of Julian centuries since 1900.
-  s = (julian - 2415020) / 36525.0;
-
-  Serial.print("Centuries: ");
-  Serial.println(s, 9);
+  s = julian - 2415020;
+  s = (s + hour / 24.0) / 36525.0;
 
   s = 6.6460656 + 2400.051 * s + 0.00002581 * s * s;
-
-  Serial.print("Sidereal from centuries: ");
-  Serial.println(s, 9);
 
   // This is basically MOD 24.
   s = (s / 24.0 - floor(s / 24.0)) * 24;
@@ -174,7 +147,7 @@ float getSiderealTime(double julian, float hour, float longitude)
   if (s > 24) s = s - 24;
 
   // Return in radians.
-  return (float)(s / 12.0 * M_PI);
+  return s / 12.0 * M_PI;
 }
 
 void celestialToEquatorial(float ra, float dec, float latV, float longV,

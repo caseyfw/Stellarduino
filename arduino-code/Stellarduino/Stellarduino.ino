@@ -48,8 +48,8 @@
 // The number of stars to use during alignment - currently immutable.
 #define ALIGNMENT_STARS 2
 
-// Viewing location expressed as radians.
-float viewingCoords[] = {2.4190437966, -0.6096260544};
+// Viewing location [lat, long] expressed as radians.
+float viewingCoords[] = {-0.6096260544, 2.4190437966};
 
 // Alignment stars - loaded from EEPROM.
 ObservedStar alignmentStars[2];
@@ -85,7 +85,7 @@ float thirdCVector[3];
 float obsTVector[3];
 float obsCVector[3];
 
-// Final observed star coordinates.
+// Final observed star coordinates [ra, dec] in radians.
 float obs[2];
 
 // Matricies.
@@ -135,13 +135,22 @@ void setup()
     delay(5000);
   }
 
-  if (rtc.begin() && rtc.isrunning()) {
-    Serial.println("Auto selecting stars.");
-    autoSelectAlignmentStars();
-  } else {
-    Serial.println("Manually selecting stars.");
-    manuallySelectAlignmentStars();
-  }
+  // OMFG TEST REMOVE ME
+  Serial.println("Auto selecting stars.");
+  autoSelectAlignmentStars();
+
+  // if (rtc.begin() && rtc.isrunning()) {
+  //   Serial.println("Auto selecting stars.");
+  //   autoSelectAlignmentStars();
+  // } else {
+  //   Serial.println("Manually selecting stars.");
+  //   manuallySelectAlignmentStars();
+  // }
+
+  Serial.print("Alignment star 1: ");
+  Serial.println(alignmentStars[0].name);
+  Serial.print("Alignment star 2: ");
+  Serial.println(alignmentStars[1].name);
 
   Serial.println("Starting alignment.");
   lcd.print("Starting algnmnt");
@@ -173,9 +182,11 @@ void setup()
 
 void loop()
 {
+  // Read encoder values.
   altT = altMultiplier * altEncoder.read();
   azT = azMultiplier * azEncoder.read();
 
+  // Use transformation matrix to convert to RA/Dec
   fillVectorWithT(obsTVector, altT, azT);
   fillMatrixWithProduct(obsCVector, inverseTransformMatrix, obsTVector,
     3, 3, 1);
@@ -198,6 +209,7 @@ void loop()
     Serial.read();
   }
 
+  // Refresh LCD.
   lcd.setCursor(5,0);
   lcd.print(rad2hm(obs[0]));
   lcd.print(" ");
@@ -221,23 +233,15 @@ void autoSelectAlignmentStars()
   // float hour = initialDate.hour() + initialDate.minute() / 60.0 +
   //   initialDate.second() / 3600.0;
 
-  // Calculate approximate Julian date.
-  // float julian = getJulianDate(initialDate.year(), initialDate.month(), initialDate.day(), hour);
+  // Calculate approximate current Julian day.
+  // float julianDay = getJulianDay(initialDate.year(), initialDate.month(), initialDate.day());
 
   // OMFG TEST REMOVE ME
-  double hour = 7 + 25 / 60.0 + 0 / 3600.0;
-  double julian = getJulianDate(2015, 11, 18, hour);
-
-  Serial.print("Julian: ");
-  Serial.print(julian, 5);
-  Serial.println();
+  float hour = 7 + 25 / 60.0 + 0 / 3600.0;
+  float julianDay = getJulianDay(2015, 11, 18);
 
   // Calculate initial local sidereal time.
-  initialSiderealTime = getSiderealTime(julian, hour, viewingCoords[1]);
-
-  Serial.print("Initial sidereal time: ");
-  Serial.print(initialSiderealTime, 5);
-  Serial.println();
+  initialSiderealTime = getSiderealTime(julianDay, hour, viewingCoords[1]);
 
   // Alignment star counter.
   int n = 0;

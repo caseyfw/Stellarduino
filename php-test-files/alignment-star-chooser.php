@@ -15,7 +15,7 @@ date_default_timezone_set("Australia/Adelaide");
 $time = new DateTime('2015-11-18 17:55:00');
 
 $stars = array();
-$file = fopen('stars.csv','r');
+$file = fopen(dirname(__FILE__) . '/stars.csv','r');
 
 // load alignment stars
 while($csv = fgetcsv($file)) {
@@ -36,8 +36,6 @@ echo "Lat: ".rad2dms($lat)."\n";
 echo "Long: ".rad2dms($long)."\n";
 echo "Long: ".rad2hms($long)."\n";
 echo "LST: ".rad2hms($lst)."\n";
-
-die;
 
 $counter = 0;
 // calculate alt az of each alignment star
@@ -124,14 +122,17 @@ function getLST($time, $long) {
     echo "Gregorian: " . $gregorian . "\n";
 
     // Julian date approximation
-    $julian = floor(365.25 * $year) + floor(30.6001 * ($month + 1)) + $day +
-        1720994.5 + $gregorian;
-    echo "Julian day: " . $julian . "\n";
-    $julian = $julian + $hour / 24.0;
-    echo "Julian: " . $julian . "\n";
+    $julian_days = floor(365.25 * $year) + floor(30.6001 * ($month + 1)) + $day + 1720994.5 + $gregorian;
+    echo "Julian day: " . $julian_days . "\n";
+    $julian_hours = $julian_days + $hour / 24.0;
+    echo "Julian: " . $julian_hours . "\n";
+    $j2000 = $julian_days - 2415020 . "\n";
+    echo "J2000: " . $j2000;
 
-    $centuries = ($julian - 2415020) / 36525.0;
-    echo "Centuries: " . $centuries . "\n";
+    $centuries = ($julian_hours - 2415020) / 36525.0;
+    echo "Centuries (old way): " . $centuries . "\n";
+    $centuries = ($j2000 + $hour / 24.0) / 36525.0;
+    echo "Centuries (new way): " . $centuries . "\n";
     $sidereal = 6.6460656 + 2400.051 * $centuries + 0.00002581 * ($centuries ^ 2);
     echo "Sidereal from centuries: " . $sidereal . "\n";
     $sidereal2 = ($sidereal / 24.0 - floor($sidereal / 24.0)) * 24;

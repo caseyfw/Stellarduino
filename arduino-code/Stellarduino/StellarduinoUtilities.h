@@ -58,13 +58,13 @@ void die();
 int choose(char* question, char** answers);
 
 // Star catalogue EEPROM functions.
-void loadCatalogueStar(int i, CatalogueStar star);
-float loadNameFromEEPROM(int offset, char* name);
-float loadFloatFromEEPROM(int offset, float* value);
+void loadCatalogueStar(int i, CatalogueStar& star);
+void loadNameFromEEPROM(int offset, char* name);
+void loadFloatFromEEPROM(int offset, float* value);
 
 // Coordinate geometry functions.
-double getJulianDate(int year, int month, int day, double hour);
-float getSiderealTime(double julianDate, float hour, float longitude = 0.0);
+float getJulianDay(int year, int month, int day);
+float getSiderealTime(float julianDate, float hour, float longitude = 0.0);
 void celestialToEquatorial(float ra, float dec, float latV, float longV,
   float lst, float* obs);
 
