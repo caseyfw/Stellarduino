@@ -211,10 +211,10 @@ void loop()
 
   // Refresh LCD.
   lcd.setCursor(5,0);
-  lcd.print(rad2hm(obs[0]));
+  lcd.print(rad2hms(obs[0]));
   lcd.print(" ");
   lcd.setCursor(5,1);
-  lcd.print(rad2dm(obs[1]));
+  lcd.print(rad2dms(obs[1]));
   lcd.print(" ");
 
   // if there's a serial request waiting, process it
@@ -230,18 +230,15 @@ void loop()
 void autoSelectAlignmentStars()
 {
   // Hours, minutes and seconds in decimal since program started running.
-  // float hour = initialDate.hour() + initialDate.minute() / 60.0 +
-  //   initialDate.second() / 3600.0;
+  float hour = initialDate.hour() + initialDate.minute() / 60.0 +
+    initialDate.second() / 3600.0;
 
   // Calculate approximate current Julian day.
-  // float julianDay = getJulianDay(initialDate.year(), initialDate.month(), initialDate.day());
-
-  // OMFG TEST REMOVE ME
-  float hour = 7 + 25 / 60.0 + 0 / 3600.0;
-  float julianDay = getJulianDay(2015, 11, 18);
+  float julianDate = getJulianDate(initialDate.year(), initialDate.month(),
+    initialDate.day());
 
   // Calculate initial local sidereal time.
-  initialSiderealTime = getSiderealTime(julianDay, hour, viewingCoords[1]);
+  initialSiderealTime = getSiderealTime(julianDate, hour, viewingCoords[1]);
 
   // Alignment star counter.
   int n = 0;
@@ -254,9 +251,10 @@ void autoSelectAlignmentStars()
       catalogueStar.dec,
       viewingCoords[0],
       viewingCoords[1],
-      initialSiderealTime + (float)millis() / milliRadsPerDay,
+      initialSiderealTime + (float)millis() / 13713441.095,
       obs
     );
+    // TODO: Figure out the milliRadsPerSiderealDay issue.
 
     // If catalogue star is higher than 25 degrees above the horizon.
     if (obs[0] > 0.436332313) {
@@ -276,6 +274,7 @@ void autoSelectAlignmentStars()
   }
 
   // If we get to here, insufficient alignment stars have been selected. Error!
+  lcd.clear();
   lcd.print("Insuff. alignmnt");
   lcd.setCursor(0, 1);
   lcd.print("stars visible.");

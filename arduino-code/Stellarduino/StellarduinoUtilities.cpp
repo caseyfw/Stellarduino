@@ -11,10 +11,10 @@
 
 #include "StellarduinoUtilities.h"
 
-String rad2hm(float rad, boolean highPrecision)
+String rad2hms(float rad, boolean highPrecision)
 {
   if (rad < 0) rad = rad + 2.0 * M_PI;
-  float hours = rad * 24.0 / (2.0 * M_PI);
+  float hours = rad * 12.0 / M_PI;
   float minutes = (hours - floor(hours)) * 60.0;
 
   if (highPrecision) {
@@ -28,7 +28,7 @@ String rad2hm(float rad, boolean highPrecision)
   }
 }
 
-String rad2dm(float rad, boolean highPrecision)
+String rad2dms(float rad, boolean highPrecision)
 {
   float degs = abs(rad) * 360.0 / (2.0 * M_PI);
   float minutes = (degs - floor(degs)) * 60.0;
@@ -37,7 +37,7 @@ String rad2dm(float rad, boolean highPrecision)
 
   if (highPrecision) {
     return sign + padding((String)int(floor(degs)), 2) + "*" +
-      padding((String)int(floor(minutes)), 2) + ":" +
+      padding((String)int(floor(minutes)), 2) + "'" +
       padding((String)int(floor((minutes - floor(minutes)) * 60.0)), 2);
   } else {
     return sign + padding((String)int(floor(degs)), 2) + "*" +
@@ -107,40 +107,46 @@ void loadFloatFromEEPROM(int offset, float* value)
  * Approximates the Julian date for the current one. Not valid for dates before
  * 1582 AD.
  */
-float getJulianDay(int year, int month, int day)
+float getJulianDate(int year, int month, int day)
 {
   int gregorian;
 
-  // Massage year/month to work with Gregorian approximation formula below.
+  // Massage year/month to work with approximation formula below.
   if (month < 3) {
       year = year - 1;
       month = month + 12;
   }
 
   // Approximate the difference between Gregorian and Julian dates.
-  gregorian = 2 - floor(year / 100.0) + floor(floor(year / 100.0) / 4.0);
+  gregorian = 2 - floor(year / 100.0) + floor(year / 400.0);
 
   // Julian date approximation.
-  return floor(365.25 * year) + floor(30.6001 * (month + 1)) + day +
-    1720994.5 + gregorian;
+  return floor(365.25 * year) + floor(30.6001 * (month + 1)) + day + gregorian +
+    1720994.5;
 }
 
 float getSiderealTime(float julian, float hour, float longitude)
 {
   float s;
 
-  // Approximation of Julian centuries since 1900.
-  s = julian - 2415020;
-  s = (s + hour / 24.0) / 36525.0;
+  // Julian centuries since J2000.0.
+  s = (julian - 2451545.0) / 36525.0;
 
-  s = 6.6460656 + 2400.051 * s + 0.00002581 * s * s;
+  // Sidereal time approximation quadratic.
+  s = 6.697374558 + 2400.051336 * s + 0.000025862 * s * s;
 
-  // This is basically MOD 24.
-  s = (s / 24.0 - floor(s / 24.0)) * 24;
-  s = s + hour * 1.002737908;
+  // Mod back to 0 < s < 24. This keeps just the fraction part of s / 24.
+  s = fmod(s, 24.0);
 
-  // Add in viewer's longitude offset (in radians).
-  s = s + longitude / (M_PI / 12.0);
+  // Add hours at the sidereal rate.
+  s = s + hour * siderealFraction;
+
+  // Mod back again, just in case it goes over 24. Doing this twice increases
+  // accuracy, because we're restricted to single precision floats.
+  s = fmod(s, 24.0);
+
+  // Add in viewer's longitude offset, which must be converted from radians.
+  s = s + longitude * (12.0 / M_PI);
 
   // Massage to make result 0 < sidereal < 24.
   if (s < 0) s = s + 24;
@@ -155,7 +161,7 @@ void celestialToEquatorial(float ra, float dec, float latV, float longV,
 {
   float ha = lst - ra;
   if (ha < 0) {
-    ha += 2 * M_PI;
+    ha += 2.0 * M_PI;
   }
   obs[0] = asin(sin(dec) * sin(latV) + cos(dec) * cos(latV) * cos(ha));
   obs[1] = acos((sin(dec) - sin(obs[0]) * sin(latV)) / (cos(obs[0]) * cos(latV)));

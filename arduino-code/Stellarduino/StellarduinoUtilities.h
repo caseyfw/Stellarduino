@@ -25,8 +25,9 @@
 #define TOTAL_LENGTH 20 // 20 bytes per star total
 
 // Solar day (24h00m00s) / sidereal day (23h56m04.0916s).
-const float siderealFraction = 1.002737908;
-const float rad2deg = 57.29577951308232;
+const float siderealFraction = 1.002737909;
+// TODO: Determine if this is necessary, it's just 360 / (2 * pi)
+const float rad2deg = 57.295779513;
 const float milliRadsPerDay = 542867210.54;
 
 // Structures.
@@ -51,8 +52,8 @@ struct CatalogueStar {
 };
 
 // Utility functions.
-String rad2hm(float rad, boolean highPrecision = false);
-String rad2dm(float rad, boolean highPrecision = false);
+String rad2hms(float rad, boolean highPrecision = false);
+String rad2dms(float rad, boolean highPrecision = false);
 String padding(String str, int length);
 void die();
 int choose(char* question, char** answers);
@@ -63,8 +64,8 @@ void loadNameFromEEPROM(int offset, char* name);
 void loadFloatFromEEPROM(int offset, float* value);
 
 // Coordinate geometry functions.
-float getJulianDay(int year, int month, int day);
-float getSiderealTime(float julianDate, float hour, float longitude = 0.0);
+float getJulianDate(int year, int month, int day);
+float getSiderealTime(float julianDate, float hour = 0.0, float longitude = 0.0);
 void celestialToEquatorial(float ra, float dec, float latV, float longV,
   float lst, float* obs);
 
