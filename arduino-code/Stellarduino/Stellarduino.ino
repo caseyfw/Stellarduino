@@ -31,12 +31,7 @@
 #include "StellarduinoUtilities.h"
 #include "MeadeSerial.h"
 
-#define DEBUG true
-
-// Buttons.
-#define OK_BTN A0
-#define UP_BTN A1
-#define DOWN_BTN A2
+#define DEBUG false
 
 // Encoder steps per revolution of scope (typically 4 * CPR * gearing).
 #define ALT_SPR 10000
@@ -48,21 +43,16 @@
 // The number of stars to use during alignment - currently immutable.
 #define ALIGNMENT_STARS 2
 
-// Viewing location [lat, long] expressed as radians.
-float viewingCoords[] = {-0.6096260544, 2.4190437966};
-
-// Alignment stars - loaded from EEPROM.
-ObservedStar alignmentStars[2];
-
-// Temp location to put catalogue stars while calculating their suitability.
-CatalogueStar catalogueStar;
-
 // Meade serial connection.
 MeadeSerial meade;
 
 // Display.
 // TODO: Make provision for I2C LCD.
 LiquidCrystal lcd(6, 7, 8, 9, 10, 11);
+
+// Encoders.
+Encoder altEncoder(2, 4);
+Encoder azEncoder(3, 5);
 
 // Real Time Clock.
 RTC_DS1307 rtc;
@@ -73,7 +63,27 @@ DateTime initialDate;
 // Initial time as radians.
 float initialTime;
 
-// calculation vectors
+// Sidereal time when the sketch started, expressed in radians.
+// TODO: This could replace initialTime, or at least inform it.
+float initialSiderealTime;
+
+// Alignment stars - loaded from EEPROM.
+ObservedStar alignmentStars[2];
+
+// Temp location to put catalogue stars while calculating their suitability.
+CatalogueStar catalogueStar;
+
+// Handy modifiers to convert encoder ticks to radians.
+float altMultiplier;
+float azMultiplier;
+
+// Unprocessed telescope orientation in radians from encoders.
+float altT, azT;
+
+// Viewing coordinates in radians.
+float latitude, longitude;
+
+// Calculation vectors.
 float firstTVector[3];
 float secondTVector[3];
 float thirdTVector[3];
@@ -85,9 +95,6 @@ float thirdCVector[3];
 float obsTVector[3];
 float obsCVector[3];
 
-// Final observed star coordinates [ra, dec] in radians.
-float obs[2];
-
 // Matricies.
 float telescopeMatrix[9];
 float celestialMatrix[9];
@@ -95,23 +102,8 @@ float inverseMatrix[9];
 float transformMatrix[9];
 float inverseTransformMatrix[9];
 
-// Encoders.
-Encoder altEncoder(2, 4);
-Encoder azEncoder(3, 5);
-
-// Handy modifiers to convert encoder ticks to radians.
-float altMultiplier;
-float azMultiplier;
-
-// Telescope coords in radians.
-float altT, azT;
-
-// Viewing coords in radians.
-float altV, azV;
-
-// Sidereal time when the sketch started, expressed in radians.
-// TODO: This could replace initialTime, or at least inform it.
-float initialSiderealTime;
+// Final observed star coordinates [ra, dec] in radians.
+float obs[2];
 
 void setup()
 {
@@ -124,6 +116,10 @@ void setup()
     initialDate = rtc.now();
   }
 
+  // Attempt to fetch viewing location from EEPROM.
+  loadFloatFromEEPROM(LAT_ADDR, &latitude);
+  loadFloatFromEEPROM(LONG_ADDR, &longitude);
+
   lcd.begin(16, 2);
   lcd.clear();
   pinMode(OK_BTN, INPUT);
@@ -135,49 +131,53 @@ void setup()
     delay(5000);
   }
 
-  // OMFG TEST REMOVE ME
-  Serial.println("Auto selecting stars.");
-  autoSelectAlignmentStars();
+  const char starSelectionOptions[][10] = {"Auto", "Semi-auto", "Manually"};
 
-  // if (rtc.begin() && rtc.isrunning()) {
-  //   Serial.println("Auto selecting stars.");
-  //   autoSelectAlignmentStars();
-  // } else {
-  //   Serial.println("Manually selecting stars.");
-  //   manuallySelectAlignmentStars();
-  // }
+  switch (lcdChoose(lcd, "Star selection?", starSelectionOptions, 3)) {
+    // Automatic alignment star selection.
+    case 0:
+      // Check if RTC is working and viewing coordinates make sense.
+      if (rtc.isrunning() &&
+        latitude >= M_PI * -0.5 && latitude <= M_PI * 0.5 &&
+        longitude >= M_PI * -1.0 && longitude <= M_PI ) {
+        autoSelectAlignmentStars();
+      } else {
+        lcd.clear();
+        lcd.print("Error: date or");
+        lcd.setCursor(0,1);
+        lcd.print("coords not set.");
+        die();
+      }
+      break;
 
-  Serial.print("Alignment star 1: ");
-  Serial.println(alignmentStars[0].name);
-  Serial.print("Alignment star 2: ");
-  Serial.println(alignmentStars[1].name);
+    // Semi-automatic alignment star selection.
+    case 1:
+      // Determine date and time
+      lcdDatePrompt(lcd, initialDate);
+      lcdCoordPrompt(lcd, "Enter latitude", &latitude);
+      lcdCoordPrompt(lcd, "Enter longitude", &latitude);
+      break;
 
-  Serial.println("Starting alignment.");
-  lcd.print("Starting algnmnt");
+    // Manual alignment star selection.
+    case 2:
+      lcdChooseCatalogueStars(lcd, alignmentStars);
+      break;
+  }
+
+  lcd.clear();
+  lcd.print("Star 1: ");
+  lcd.print(alignmentStars[0].name);
+  lcd.setCursor(0,1);
+  lcd.print("Star 2: ");
+  lcd.print(alignmentStars[1].name);
+  delay(5000);
 
   doAlignment();
 
   calculateTransforms();
 
-  if (DEBUG) {
-    Serial.println("Telescope matrix:");
-    printMatrix(telescopeMatrix);
-
-    Serial.println("Celestial matrix:");
-    printMatrix(celestialMatrix);
-
-    Serial.println("Inverse Celestial matrix:");
-    printMatrix(inverseMatrix);
-
-    Serial.println("Transform matrix:");
-    printMatrix(transformMatrix);
-
-    Serial.println("Inverse Transform matrix:");
-    printMatrix(inverseTransformMatrix);
-  }
-
   clearScreen();
-//  meade.begin(obs, false, 9600);
+  meade.begin(obs, false, 9600);
 }
 
 void loop()
@@ -191,23 +191,6 @@ void loop()
   fillMatrixWithProduct(obsCVector, inverseTransformMatrix, obsTVector,
     3, 3, 1);
   fillStarWithCVector(obs, obsCVector, initialTime);
-
-  if (DEBUG) {
-    Serial.println("Observed vector:");
-    printVector(obsTVector);
-    Serial.println("Transformed celestial vector:");
-    printVector(obsCVector);
-    Serial.println("Celestial coordinates:");
-    Serial.print(obs[0]);
-    Serial.print(",");
-    Serial.println(obs[1]);
-
-    // wait for input from serial before continuing
-    while(Serial.available() == 0) {
-      // do nothing
-    }
-    Serial.read();
-  }
 
   // Refresh LCD.
   lcd.setCursor(5,0);
@@ -238,7 +221,7 @@ void autoSelectAlignmentStars()
     initialDate.day());
 
   // Calculate initial local sidereal time.
-  initialSiderealTime = getSiderealTime(julianDate, hour, viewingCoords[1]);
+  initialSiderealTime = getSiderealTime(julianDate, hour, longitude);
 
   // Alignment star counter.
   int n = 0;
@@ -249,8 +232,8 @@ void autoSelectAlignmentStars()
     celestialToEquatorial(
       catalogueStar.ra,
       catalogueStar.dec,
-      viewingCoords[0],
-      viewingCoords[1],
+      latitude,
+      longitude,
       initialSiderealTime + (float)millis() / 13713441.095,
       obs
     );
@@ -281,29 +264,12 @@ void autoSelectAlignmentStars()
   die();
 }
 
-void manuallySelectAlignmentStars()
-{
-  alignmentStars[0] = (ObservedStar) {
-    "Arcturus",
-    3.73352834160889,
-    0.334797783763812,
-    0.0,
-    0.0
-  };
-  alignmentStars[1] = (ObservedStar) {
-    "Rigel K",
-    3.83797175293031,
-    -1.06177589858756,
-    0.0,
-    0.0
-  };
-}
-
 void doAlignment() {
   // Set initial time - actual time not necessary, just the difference!
   initialTime = (float)millis() / 86400000.0f * 2.0 * M_PI;
 
   // ask user to point scope at first star
+  lcd.clear();
   lcd.print("Point: ");
   lcd.print(alignmentStars[0].name);
   lcd.setCursor(0,1);

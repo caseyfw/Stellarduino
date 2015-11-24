@@ -1,5 +1,5 @@
 /**
- * StellarduinoUtilities.h
+ * StellarduinoUtilities.cpp
  *
  * Some type defines and utility functions used by Stellarduino.
  *
@@ -60,6 +60,76 @@ void die()
 {
   while (true) {
     // Do nothing. The end. They're all dead, Jim.
+  }
+}
+
+int lcdChoose(LiquidCrystal lcd, char* question, const char answers[][10],
+  int answersCount)
+{
+  int selection = 0;
+  int button;
+
+  lcd.clear();
+  lcd.print(question);
+
+  while (true) {
+    lcd.setCursor(0, 1);
+    lcd.print("* ");
+    lcd.print(answers[selection]);
+    lcd.print("              ");
+
+    button = waitForButton();
+
+    if (button == OK_BTN) return selection;
+    if (button == UP_BTN) selection--;
+    if (button == DOWN_BTN) selection++;
+
+    // Prevent selection from wrapping the answers array
+    if (selection < 0) {
+      selection = selection + answersCount;
+    } else if (selection >= answersCount) {
+      selection = selection % answersCount;
+    }
+  }
+}
+
+void lcdDatePrompt(LiquidCrystal lcd, DateTime d)
+{
+  // TODO
+}
+
+void lcdCoordPrompt(LiquidCrystal lcd, char* question, float* value)
+{
+  // TODO
+}
+
+void lcdChooseCatalogueStars(LiquidCrystal lcd, ObservedStar* stars)
+{
+  // TODO
+}
+
+/**
+ * Waits for, then returns the pin number of the button that was pressed.
+ *
+ * TODO: Refactor this, it's horrible. There has to be a better way.
+ */
+int waitForButton()
+{
+  int button;
+
+  while (true) {
+    // Poor man's "wait for button to be pressed".
+    while (digitalRead(OK_BTN) == 0 && digitalRead(UP_BTN) == 0 &&
+      digitalRead(DOWN_BTN) == 0) {}
+
+    // Poor man's "which button was pressed?".
+    button = digitalRead(OK_BTN) ? OK_BTN :
+      digitalRead(UP_BTN) ? UP_BTN :
+      digitalRead(DOWN_BTN) ? DOWN_BTN : -1;
+
+    // Poor man's debounce.
+    delay(400);
+    return button;
   }
 }
 
