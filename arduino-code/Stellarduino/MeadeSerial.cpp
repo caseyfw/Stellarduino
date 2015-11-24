@@ -61,12 +61,12 @@ void MeadeSerial::_processCommand()
 {
   if (_command == GET_RA)
   {
-    Serial.print("#" + rad2hm(_obs[0], _highPrecision) + "#");
+    Serial.print("#" + rad2hms(_obs[0], _highPrecision) + "#");
 //    lcd.setCursor(15,1);
 //    lcd.print('R');
   } else if (_command == GET_DEC)
   {
-    Serial.print("#" + rad2dm(_obs[1], _highPrecision) + "#");
+    Serial.print("#" + rad2dms(_obs[1], _highPrecision) + "#");
 //    lcd.setCursor(15,1);
 //    lcd.print('D');
   } else if (_command == CHANGE_PRECISION)

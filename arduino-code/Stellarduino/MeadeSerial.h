@@ -30,7 +30,8 @@
 class MeadeSerial
 {
 public:
-  void begin(float obs[2], boolean highPrecision = true, unsigned int baud = 9600);
+  void begin(float obs[2], boolean highPrecision = true, unsigned int baud =
+  	9600);
   boolean available();
   void processSerial();
 private:
