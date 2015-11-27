@@ -95,7 +95,64 @@ int lcdChoose(LiquidCrystal lcd, char* question, const char answers[][10],
 
 void lcdDatePrompt(LiquidCrystal lcd, DateTime d)
 {
-  // TODO
+  int cursorPosition = 0;
+  int currentCharacter = 0;
+  char characters[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+  char text[17] = "YYYY-MM-DD HH:MM";
+  int skipPositions[4] = {4, 7, 10, 13};
+  int button;
+
+  lcd.clear();
+  lcd.print("Enter UTC Date");
+  lcd.setCursor(0, 1);
+  lcd.print(text);
+  lcd.setCursor(0, 1);
+
+  // Enable the cursor.
+  lcd.cursor();
+
+  while (true) {
+    // Write current character to screen, then reset cursor on top of it.
+    lcd.print(characters[currentCharacter]);
+    lcd.setCursor(cursorPosition, 1);
+
+    button = waitForButton();
+
+    if (button == OK_BTN) {
+      // Add selected character to text output string
+      text[cursorPosition] = characters[currentCharacter];
+
+      // Move cursor along, skipping cells if necessary.
+      cursorPosition++;
+      while (inArray(cursorPosition, skipPositions, 4)) {
+        cursorPosition++;
+      }
+      lcd.setCursor(cursorPosition, 1);
+
+      // Reset currentCharacter.
+      // TODO: Remember char when returning to a position that's already set.
+      currentCharacter = 0;
+
+      // If at end of screen, break out of loop
+      if (cursorPosition > 15) {
+        break;
+      }
+    } else if (button == UP_BTN) {
+      currentCharacter--;
+
+    } else if (button == DOWN_BTN) {
+      currentCharacter++;
+    }
+
+    // Prevent currentCharacter from wrapping the characters array
+    if (currentCharacter < 0) {
+      currentCharacter = currentCharacter + 10;
+    } else if (currentCharacter >= 10) {
+      currentCharacter = currentCharacter % 10;
+    }
+  }
+
+  // TODO: Build date from text entered into LCD.
 }
 
 void lcdCoordPrompt(LiquidCrystal lcd, char* question, float* value)
@@ -131,6 +188,21 @@ int waitForButton()
     delay(400);
     return button;
   }
+}
+
+/**
+ * Returns true if needle is present in array haystack. Only for integers, and
+ * O(N) complexity (i.e. shitty). Why is this functionality not in the standard
+ * Arduino library?
+ */
+bool inArray(int needle, int* haystack, int count)
+{
+  for (int i = 0; i < count; i++) {
+    if (haystack[i] == needle) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void loadCatalogueStar(int i, CatalogueStar& star)

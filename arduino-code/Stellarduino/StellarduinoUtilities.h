@@ -73,6 +73,7 @@ void lcdDatePrompt(LiquidCrystal lcd, DateTime d);
 void lcdCoordPrompt(LiquidCrystal lcd, char* question, float* value);
 void lcdChooseCatalogueStars(LiquidCrystal lcd, ObservedStar* stars);
 int waitForButton();
+bool inArray(int needle, int* haystack, int count);
 
 // Star catalogue EEPROM functions.
 void loadCatalogueStar(int i, CatalogueStar& star);
