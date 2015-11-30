@@ -27,16 +27,17 @@
 #define DOWN_BTN A2
 
 // EEPROM star catalogue elements.
-#define FLOAT_LENGTH 4 // 4 bytes per float number
-#define NAME_LENGTH 8 // 8 bytes per star
-#define TOTAL_LENGTH 20 // 20 bytes per star total
+#define FLOAT_LENGTH 4 // 4 bytes per float number.
+#define NAME_LENGTH 8 // 8 bytes per star.
+#define TOTAL_LENGTH 20 // 20 bytes per star total.
 
-#define LAT_ADDR 1000 // The EEPROM address of stored viewing latitude
-#define LONG_ADDR 1004 // The EEPROM address of stored viewing longitude
+#define LAT_ADDR 1000 // The EEPROM address of stored viewing latitude.
+#define LONG_ADDR 1004 // The EEPROM address of stored viewing longitude.
 
 // Solar day (24h00m00s) / sidereal day (23h56m04.0916s).
 const float siderealFraction = 1.002737909;
 const float rad2deg = 57.295779513;
+const float deg2rad = 0.01745329252;
 const float milliRadsPerDay = 542867210.54;
 
 // Structures.
@@ -63,25 +64,28 @@ struct CatalogueStar {
 // Utility functions.
 String rad2hms(float rad, boolean highPrecision = false);
 String rad2dms(float rad, boolean highPrecision = false);
-String padding(String str, int length);
+String padding(String str, uint8_t length);
+bool inArray(uint8_t needle, uint8_t* haystack, uint8_t count);
 void die();
 
 // LCD interaction functions.
-int lcdChoose(LiquidCrystal lcd, char* question, const char answers[][10],
-  int answersCount);
+uint8_t lcdChoose(LiquidCrystal lcd, char* question, const char answers[][10],
+  uint8_t answersCount);
 void lcdDatePrompt(LiquidCrystal lcd, DateTime d);
 void lcdCoordPrompt(LiquidCrystal lcd, char* question, float* value);
+void lcdPrompt(LiquidCrystal lcd, char* question, char* answer, uint8_t
+  answerLength, uint8_t* skipPositions, uint8_t skipsCount, char* characters,
+  uint8_t charactersCount);
 void lcdChooseCatalogueStars(LiquidCrystal lcd, ObservedStar* stars);
-int waitForButton();
-bool inArray(int needle, int* haystack, int count);
+uint8_t waitForButton();
 
 // Star catalogue EEPROM functions.
-void loadCatalogueStar(int i, CatalogueStar& star);
-void loadNameFromEEPROM(int offset, char* name);
-void loadFloatFromEEPROM(int offset, float* value);
+void loadCatalogueStar(uint8_t i, CatalogueStar& star);
+void loadNameFromEEPROM(uint8_t offset, char* name);
+void loadFloatFromEEPROM(uint8_t offset, float* value);
 
 // Coordinate geometry functions.
-float getJulianDate(int year, int month, int day);
+float getJulianDate(uint16_t year, uint8_t month, uint8_t day);
 float getSiderealTime(float julianDate, float hour = 0.0, float longitude = 0.0);
 void celestialToEquatorial(float ra, float dec, float latV, float longV,
   float lst, float* obs);
@@ -92,8 +96,8 @@ void fillVectorWithC(float* v, ObservedStar star, float initialTime);
 void fillVectorWithProduct(float* v, float* a, float* b);
 
 void fillMatrixWithVectors(float* m, float* a, float* b, float* c);
-void fillMatrixWithProduct(float* m, float* a, float* b, int aRows, int aCols,
-  int bCols);
+void fillMatrixWithProduct(float* m, float* a, float* b, uint8_t aRows, uint8_t aCols,
+  uint8_t bCols);
 
 void fillStarWithCVector(float* star, float* v, float initialTime);
 

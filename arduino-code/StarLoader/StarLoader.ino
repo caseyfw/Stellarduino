@@ -134,13 +134,13 @@ boolean writeStar(int offset, char name[NAME_LENGTH + 1], float ra, float dec,
  */
 boolean writeFloat(int offset, float number)
 {
-  // cast float pointer to byte pointer
+  // Cast float pointer to byte pointer.
   byte* b = (byte*) &number;
   for (int i = 0; i < 4; i++) {
-    // dereference pointer to get byte value
+    // Dereference pointer to get byte value.
     EEPROM.write(offset + i, *b);
 
-    // increment the byte pointer
+    // Increment the byte pointer.
     b++;
   }
 }
@@ -174,5 +174,5 @@ void setup()
 
 void loop()
 {
-  // do nothing
+  // Do nothing.
 }

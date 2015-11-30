@@ -18,12 +18,12 @@ String rad2hms(float rad, boolean highPrecision)
   float minutes = (hours - floor(hours)) * 60.0;
 
   if (highPrecision) {
-    return padding((String)int(floor(hours)), 2) + ":" +
-      padding((String)int(floor(minutes)), 2) + ":" +
-      padding((String)int(floor((minutes - floor(minutes)) * 60.0)), 2);
+    return padding((String)int(floor(hours)), (uint8_t)2) + ":" +
+      padding((String)int(floor(minutes)), (uint8_t)2) + ":" +
+      padding((String)int(floor((minutes - floor(minutes)) * 60.0)), (uint8_t)2);
   } else {
-    return padding((String)int(floor(hours)), 2) + ":" +
-      padding((String)int(floor(minutes)), 2) + "." +
+    return padding((String)int(floor(hours)), (uint8_t)2) + ":" +
+      padding((String)int(floor(minutes)), (uint8_t)2) + "." +
       (String)int(floor((minutes - floor(minutes)) * 10.0));
   }
 }
@@ -36,21 +36,36 @@ String rad2dms(float rad, boolean highPrecision)
   if (rad < 0) sign = "-";
 
   if (highPrecision) {
-    return sign + padding((String)int(floor(degs)), 2) + "*" +
-      padding((String)int(floor(minutes)), 2) + "'" +
-      padding((String)int(floor((minutes - floor(minutes)) * 60.0)), 2);
+    return sign + padding((String)int(floor(degs)), (uint8_t)2) + "*" +
+      padding((String)int(floor(minutes)), (uint8_t)2) + "'" +
+      padding((String)int(floor((minutes - floor(minutes)) * 60.0)), (uint8_t)2);
   } else {
-    return sign + padding((String)int(floor(degs)), 2) + "*" +
-      padding((String)int(floor(minutes)), 2);
+    return sign + padding((String)int(floor(degs)), (uint8_t)2) + "*" +
+      padding((String)int(floor(minutes)), (uint8_t)2);
   }
 }
 
-String padding(String str, int length)
+String padding(String str, uint8_t length)
 {
   while(str.length() < length) {
     str = "0" + str;
   }
   return str;
+}
+
+/**
+ * Returns true if needle is present in array haystack. Only for integers, and
+ * O(N) complexity (i.e. shitty). Why is this functionality not in the standard
+ * Arduino library?
+ */
+bool inArray(uint8_t needle, uint8_t* haystack, uint8_t count)
+{
+  for (uint8_t i = 0; i < count; i++) {
+    if (haystack[i] == needle) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
@@ -63,11 +78,11 @@ void die()
   }
 }
 
-int lcdChoose(LiquidCrystal lcd, char* question, const char answers[][10],
-  int answersCount)
+uint8_t lcdChoose(LiquidCrystal lcd, char* question, const char answers[][10],
+  uint8_t answersCount)
 {
-  int selection = 0;
-  int button;
+  uint8_t selection = 0;
+  uint8_t button;
 
   lcd.clear();
   lcd.print(question);
@@ -84,7 +99,7 @@ int lcdChoose(LiquidCrystal lcd, char* question, const char answers[][10],
     if (button == UP_BTN) selection--;
     if (button == DOWN_BTN) selection++;
 
-    // Prevent selection from wrapping the answers array
+    // Prevent selection from wrapping the answers array.
     if (selection < 0) {
       selection = selection + answersCount;
     } else if (selection >= answersCount) {
@@ -95,17 +110,58 @@ int lcdChoose(LiquidCrystal lcd, char* question, const char answers[][10],
 
 void lcdDatePrompt(LiquidCrystal lcd, DateTime d)
 {
-  int cursorPosition = 0;
-  int currentCharacter = 0;
-  char characters[10] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-  char text[17] = "YYYY-MM-DD HH:MM";
-  int skipPositions[4] = {4, 7, 10, 13};
-  int button;
+  char question[] = "Enter UTC Date";
+  char answer[] = "YYYY-MM-DD HH:MM";
+  uint8_t skipPositions[] = {4, 7, 10, 13};
+  char characters[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
+  lcdPrompt(lcd, question, answer, (uint8_t)16, skipPositions, (uint8_t)4,
+    characters, (uint8_t)10);
+
+  // Build DateTime object from answer entered into LCD.
+  d = DateTime(
+    atoi(&answer[0]),
+    atoi(&answer[5]),
+    atoi(&answer[8]),
+    atoi(&answer[11]),
+    atoi(&answer[14]),
+    0
+  );
+}
+
+void lcdCoordPrompt(LiquidCrystal lcd, char* question, float* value)
+{
+  char answer[] = "SNNN.NNNNNNN";
+  uint8_t skipPositions[] = {4};
+  char characters[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+',
+    '-'};
+
+  lcdPrompt(lcd, question, answer, (uint8_t)12, skipPositions, (uint8_t)1,
+    characters, (uint8_t)12);
+
+  // Convert answer text to float.
+  *value = atof(answer) * deg2rad;
+}
+
+/**
+ * Prompts for an answer which the user enters one character at a time using
+ * only the LCD and three buttons.
+ */
+void lcdPrompt(LiquidCrystal lcd, char* question, char* answer, uint8_t
+  answerLength, uint8_t* skipPositions, uint8_t skipsCount, char* characters,
+  uint8_t charactersCount)
+{
+  uint8_t button;
+  uint8_t cursorPosition = 0;
+  int8_t currentCharacter = 0;
+
+  // Print the question to the display.
   lcd.clear();
-  lcd.print("Enter UTC Date");
+  lcd.print(question);
   lcd.setCursor(0, 1);
-  lcd.print(text);
+
+  // Print the answer to the display as placeholder text.
+  lcd.print(answer);
   lcd.setCursor(0, 1);
 
   // Enable the cursor.
@@ -119,12 +175,12 @@ void lcdDatePrompt(LiquidCrystal lcd, DateTime d)
     button = waitForButton();
 
     if (button == OK_BTN) {
-      // Add selected character to text output string
-      text[cursorPosition] = characters[currentCharacter];
+      // Add selected character to answer output string.
+      answer[cursorPosition] = characters[currentCharacter];
 
       // Move cursor along, skipping cells if necessary.
       cursorPosition++;
-      while (inArray(cursorPosition, skipPositions, 4)) {
+      while (inArray(cursorPosition, skipPositions, skipsCount)) {
         cursorPosition++;
       }
       lcd.setCursor(cursorPosition, 1);
@@ -133,8 +189,8 @@ void lcdDatePrompt(LiquidCrystal lcd, DateTime d)
       // TODO: Remember char when returning to a position that's already set.
       currentCharacter = 0;
 
-      // If at end of screen, break out of loop
-      if (cursorPosition > 15) {
+      // If at end of answer, break out of loop.
+      if (cursorPosition >= answerLength) {
         break;
       }
     } else if (button == UP_BTN) {
@@ -144,25 +200,20 @@ void lcdDatePrompt(LiquidCrystal lcd, DateTime d)
       currentCharacter++;
     }
 
-    // Prevent currentCharacter from wrapping the characters array
+    // Prevent currentCharacter from wrapping the characters array.
     if (currentCharacter < 0) {
-      currentCharacter = currentCharacter + 10;
-    } else if (currentCharacter >= 10) {
-      currentCharacter = currentCharacter % 10;
+      currentCharacter = currentCharacter + charactersCount;
+    } else if (currentCharacter >= charactersCount) {
+      currentCharacter = currentCharacter % charactersCount;
     }
   }
 
-  // TODO: Build date from text entered into LCD.
-}
-
-void lcdCoordPrompt(LiquidCrystal lcd, char* question, float* value)
-{
-  // TODO
+  lcd.noCursor();
 }
 
 void lcdChooseCatalogueStars(LiquidCrystal lcd, ObservedStar* stars)
 {
-  // TODO
+  // TODO.
 }
 
 /**
@@ -170,9 +221,9 @@ void lcdChooseCatalogueStars(LiquidCrystal lcd, ObservedStar* stars)
  *
  * TODO: Refactor this, it's horrible. There has to be a better way.
  */
-int waitForButton()
+ uint8_t waitForButton()
 {
-  int button;
+  uint8_t button;
 
   while (true) {
     // Poor man's "wait for button to be pressed".
@@ -190,36 +241,22 @@ int waitForButton()
   }
 }
 
-/**
- * Returns true if needle is present in array haystack. Only for integers, and
- * O(N) complexity (i.e. shitty). Why is this functionality not in the standard
- * Arduino library?
- */
-bool inArray(int needle, int* haystack, int count)
+void loadCatalogueStar(uint8_t i, CatalogueStar& star)
 {
-  for (int i = 0; i < count; i++) {
-    if (haystack[i] == needle) {
-      return true;
-    }
-  }
-  return false;
-}
-
-void loadCatalogueStar(int i, CatalogueStar& star)
-{
-  int offset = i * TOTAL_LENGTH;
+  uint8_t offset = i * TOTAL_LENGTH;
   loadNameFromEEPROM(offset, star.name);
   loadFloatFromEEPROM(offset + NAME_LENGTH, &star.ra);
   loadFloatFromEEPROM(offset + NAME_LENGTH + FLOAT_LENGTH, &star.dec);
-  loadFloatFromEEPROM(offset + NAME_LENGTH + FLOAT_LENGTH + FLOAT_LENGTH, &star.vmag);
+  loadFloatFromEEPROM(offset + NAME_LENGTH + FLOAT_LENGTH + FLOAT_LENGTH,
+    &star.vmag);
 }
 
 /**
  * Reads a name (char array) from the EEPROM into the referenced char array.
  */
-void loadNameFromEEPROM(int offset, char* name)
+void loadNameFromEEPROM(uint8_t offset, char* name)
 {
-  for (int c = 0; c < NAME_LENGTH; c++) {
+  for (uint8_t c = 0; c < NAME_LENGTH; c++) {
     name[c] = EEPROM.read(offset + c);
     // If the character is blank, replace it with the null terminator.
     if (name[c] == (char) 0xFF) {
@@ -232,12 +269,12 @@ void loadNameFromEEPROM(int offset, char* name)
 /**
  * Reads a float value from the EEPROM into the referenced float.
  */
-void loadFloatFromEEPROM(int offset, float* value)
+void loadFloatFromEEPROM(uint8_t offset, float* value)
 {
   // Make pointer to byte, and make it to point to the first byte of the float.
   byte *p = (byte*)value;
 
-  for (int i = 0; i < FLOAT_LENGTH; i++) {
+  for (uint8_t i = 0; i < FLOAT_LENGTH; i++) {
     // Assign whatever byte is in EEPROM to the byte p points to.
     *p = EEPROM.read(offset + i);
     // Move p up to the next byte.
@@ -249,9 +286,9 @@ void loadFloatFromEEPROM(int offset, float* value)
  * Approximates the Julian date for the current one. Not valid for dates before
  * 1582 AD.
  */
-float getJulianDate(int year, int month, int day)
+float getJulianDate(uint16_t year, uint8_t month, uint8_t day)
 {
-  int gregorian;
+  uint16_t gregorian;
 
   // Massage year/month to work with approximation formula below.
   if (month < 3) {
@@ -358,13 +395,13 @@ void fillMatrixWithVectors(float* m, float* a, float* b, float* c)
   m[8] = c[2];
 }
 
-void fillMatrixWithProduct(float* m, float* a, float* b, int aRows, int aCols,
-  int bCols)
+void fillMatrixWithProduct(float* m, float* a, float* b, uint8_t aRows, uint8_t aCols,
+  uint8_t bCols)
 {
-  for (int i = 0; i < aRows; i++) {
-    for (int j = 0; j < bCols; j++) {
+  for (uint8_t i = 0; i < aRows; i++) {
+    for (uint8_t j = 0; j < bCols; j++) {
       m[bCols * i + j] = 0;
-      for (int k = 0; k < aCols; k++) {
+      for (uint8_t k = 0; k < aCols; k++) {
         m[bCols * i + j] = m[bCols * i + j] + a[aCols * i + k] * b[bCols * k + j];
       }
     }
@@ -373,7 +410,7 @@ void fillMatrixWithProduct(float* m, float* a, float* b, int aRows, int aCols,
 
 void copyMatrix(float* recipient, float* donor)
 {
-  for (int i = 0; i < 9; i++) {
+  for (uint8_t i = 0; i < 9; i++) {
     recipient[i] = donor[i];
   }
 }
@@ -381,9 +418,9 @@ void copyMatrix(float* recipient, float* donor)
 void invertMatrix(float* m)
 {
   float temp;
-  int pivrow;
-  int pivrows[9];
-  int i,j,k;
+  uint8_t pivrow;
+  uint8_t pivrows[9];
+  uint8_t i,j,k;
 
   for (k = 0; k < 3; k++) {
     temp = 0;
@@ -393,7 +430,6 @@ void invertMatrix(float* m)
         pivrow = i;
       }
     }
-    // should do something here... if (m[pivrow * 3 + k] == 0.0) "singular matrix"
     if (pivrow != k) {
       for (j = 0; j < 3; j++) {
         temp = m[k * 3 + j];
@@ -402,13 +438,13 @@ void invertMatrix(float* m)
       }
     }
 
-    //record pivot row swap
+    // Record pivot row swap.
     pivrows[k] = pivrow;
 
     temp = 1.0 / m[k * 3 + k];
     m[k * 3 + k] = 1.0;
 
-    // row reduction
+    // Row reduction.
     for (j = 0; j < 3; j++) {
       m[k * 3 + j] = m[k * 3 + j] * temp;
     }

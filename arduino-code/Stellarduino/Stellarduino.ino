@@ -152,10 +152,13 @@ void setup()
 
     // Semi-automatic alignment star selection.
     case 1:
-      // Determine date and time
+      // Determine date and time.
       lcdDatePrompt(lcd, initialDate);
       lcdCoordPrompt(lcd, "Enter latitude", &latitude);
       lcdCoordPrompt(lcd, "Enter longitude", &latitude);
+
+      // Once data is collected, star selection can be performed.
+      autoSelectAlignmentStars();
       break;
 
     // Manual alignment star selection.
@@ -186,7 +189,7 @@ void loop()
   altT = altMultiplier * altEncoder.read();
   azT = azMultiplier * azEncoder.read();
 
-  // Use transformation matrix to convert to RA/Dec
+  // Use transformation matrix to convert to RA/Dec.
   fillVectorWithT(obsTVector, altT, azT);
   fillMatrixWithProduct(obsCVector, inverseTransformMatrix, obsTVector,
     3, 3, 1);
@@ -200,7 +203,7 @@ void loop()
   lcd.print(rad2dms(obs[1]));
   lcd.print(" ");
 
-  // if there's a serial request waiting, process it
+  // If there's a serial request waiting, process it.
   if (Serial.available()) {
     meade.processSerial();
   }
@@ -224,9 +227,8 @@ void autoSelectAlignmentStars()
   initialSiderealTime = getSiderealTime(julianDate, hour, longitude);
 
   // Alignment star counter.
-  int n = 0;
-  // foreach catalogue star
-  for (int i = 0; i < CATALOGUE_STARS; i++) {
+  uint8_t n = 0;
+  for (uint8_t i = 0; i < CATALOGUE_STARS; i++) {
     loadCatalogueStar(i, catalogueStar);
 
     celestialToEquatorial(
@@ -268,14 +270,14 @@ void doAlignment() {
   // Set initial time - actual time not necessary, just the difference!
   initialTime = (float)millis() / 86400000.0f * 2.0 * M_PI;
 
-  // ask user to point scope at first star
+  // Ask user to point scope at first star.
   lcd.clear();
   lcd.print("Point: ");
   lcd.print(alignmentStars[0].name);
   lcd.setCursor(0,1);
   lcd.print("Then press OK");
 
-  // wait for button press
+  // Wait for button press.
   while(digitalRead(OK_BTN) == LOW);
   alignmentStars[0].time = (float)millis() / 86400000.0f * 2.0 * M_PI;
   alignmentStars[0].alt = altMultiplier * altEncoder.read();
@@ -290,14 +292,14 @@ void doAlignment() {
 
   delay(2000);
 
-  // ask user to point scope at second star
+  // Ask user to point scope at second star.
   lcd.clear();
   lcd.print("Point: ");
   lcd.print(alignmentStars[1].name);
   lcd.setCursor(0,1);
   lcd.print("Then press OK");
 
-  // wait for button press
+  // Wait for button press.
   while(digitalRead(OK_BTN) == LOW);
   alignmentStars[1].time = (float)millis() / 86400000.0f * 2.0 * M_PI;
   alignmentStars[1].az = azMultiplier * azEncoder.read();
@@ -314,18 +316,18 @@ void doAlignment() {
 }
 
 void calculateTransforms() {
-  // calculate vectors for alignment stars
+  // Calculate vectors for alignment stars.
   fillVectorWithT(firstTVector, alignmentStars[0].alt, alignmentStars[0].az);
   fillVectorWithT(secondTVector, alignmentStars[1].alt, alignmentStars[1].az);
 
-  // calculate third's vectors
+  // Calculate third's vectors.
   fillVectorWithProduct(thirdTVector, firstTVector, secondTVector);
 
-  // calculate celestial vectors for alignment stars
+  // Calculate celestial vectors for alignment stars.
   fillVectorWithC(firstCVector, alignmentStars[0], initialTime);
   fillVectorWithC(secondCVector, alignmentStars[1], initialTime);
 
-  // calculate third's vector
+  // Calculate third's vector.
   fillVectorWithProduct(thirdCVector, firstCVector, secondCVector);
 
   fillMatrixWithVectors(telescopeMatrix, firstTVector, secondTVector,
@@ -352,7 +354,7 @@ void clearScreen()
 
 void printMatrix(float* m)
 {
-  // apparently I deleted the print matrix function, so I'm adding this back in
+  // Apparently I deleted the print matrix function, so I'm adding this back in
   // so debug doesn't die.
 
   // TODO: rewrite printMatrix.
@@ -360,7 +362,7 @@ void printMatrix(float* m)
 
 void printVector(float* v)
 {
-  // apparently I deleted the print vector function, so I'm adding this back in
+  // Apparently I deleted the print vector function, so I'm adding this back in
   // so debug doesn't die.
 
   // TODO: rewrite printVector.

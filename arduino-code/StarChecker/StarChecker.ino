@@ -12,9 +12,9 @@
 #include <EEPROM.h>
 #include <math.h>
 
-#define FLOAT_LENGTH 4 // 4 bytes per float number
-#define NAME_LENGTH 8 // 8 bytes per star
-#define TOTAL_LENGTH 20 // 20 bytes per star total
+#define FLOAT_LENGTH 4 // 4 bytes per float number.
+#define NAME_LENGTH 8 // 8 bytes per star.
+#define TOTAL_LENGTH 20 // 20 bytes per star total.
 #define NUM_OF_STARS 50 // 20 x 50 = 1000 bytes, ~ the size of the Uno EEPROM.
 
 struct CatalogueStar
@@ -75,15 +75,15 @@ String rad2dms(float rad) {
  * Reads a float value from the EEPROM.
  */
 float readFloat(int offset) {
-  // make a regular four-byte float to hold the value
+  // Make a regular four-byte float to hold the value.
   float value;
-  // make a pointer to byte, and initialise it to point to the first byte of the
-  // float
+  // Make a pointer to byte, and initialise it to point to the first byte of the
+  // float.
   byte *p = (byte*)(void*)&value;
   for (int i = 0; i < sizeof(value); i++) {
-    // assign whatever byte is in EEPROM to the byte p points to
+    // Assign whatever byte is in EEPROM to the byte p points to.
     *p = EEPROM.read(offset + i);
-    // move p up to the next byte
+    // Move p up to the next byte.
     p++;
   }
   return value;
@@ -105,7 +105,7 @@ void setup()
 
   for (int i = 0; i < NUM_OF_STARS; i++) {
     for (int c = 0; c < NAME_LENGTH; c++) {
-      // fetch name
+      // Fetch name.
       star.name[c] = EEPROM.read(i * TOTAL_LENGTH + c);
       if (star.name[c] == (char) 0xFF) {
         star.name[c] = '\0';
@@ -113,12 +113,12 @@ void setup()
       }
     }
 
-    // fetch floats from next 12 bytes
+    // Fetch floats from next 12 bytes.
     star.ra   = readFloat(i * TOTAL_LENGTH + NAME_LENGTH);
     star.dec  = readFloat(i * TOTAL_LENGTH + NAME_LENGTH + FLOAT_LENGTH);
     star.vmag = readFloat(i * TOTAL_LENGTH + NAME_LENGTH + FLOAT_LENGTH * 2);
 
-    // print the star's details with padding so it looks nice
+    // Print the star's details with padding so it looks nice.
     Serial.print(padding((String) (i + 1), 2) + "  ");
     Serial.print(padding(star.name, 10, ' ', false));
     Serial.print(padding(rad2hms(star.ra), 17, ' ', false));
@@ -134,5 +134,5 @@ void setup()
 
 void loop()
 {
-  // do nothing
+  // Do nothing.
 }
