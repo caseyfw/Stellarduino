@@ -34,6 +34,12 @@
 #define LAT_ADDR 1000 // The EEPROM address of stored viewing latitude.
 #define LONG_ADDR 1004 // The EEPROM address of stored viewing longitude.
 
+ // The number of stars in the EEPROM catalogue.
+ #define CATALOGUE_STARS 50
+
+ // The number of stars to use during alignment - currently immutable.
+ #define ALIGNMENT_STARS 2
+
 // Solar day (24h00m00s) / sidereal day (23h56m04.0916s).
 const float siderealFraction = 1.002737909;
 const float rad2deg = 57.295779513;

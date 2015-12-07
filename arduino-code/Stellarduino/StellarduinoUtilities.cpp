@@ -158,9 +158,9 @@ void lcdPrompt(LiquidCrystal lcd, char* question, char* answer, uint8_t
   // Print the question to the display.
   lcd.clear();
   lcd.print(question);
-  lcd.setCursor(0, 1);
 
   // Print the answer to the display as placeholder text.
+  lcd.setCursor(0, 1);
   lcd.print(answer);
   lcd.setCursor(0, 1);
 
@@ -213,7 +213,53 @@ void lcdPrompt(LiquidCrystal lcd, char* question, char* answer, uint8_t
 
 void lcdChooseCatalogueStars(LiquidCrystal lcd, ObservedStar* stars)
 {
-  // TODO.
+  CatalogueStar catalogueStar;
+  uint8_t button;
+  uint8_t starIndex = 0;
+  int8_t currentStar = 0;
+
+  while (true) {
+    // Load star from catalogue.
+    loadCatalogueStar(currentStar, catalogueStar);
+
+    // Print the question to the display.
+    lcd.setCursor(0, 0);
+    lcd.print("Select ");
+    lcd.print(ALIGNMENT_STARS - starIndex);
+    lcd.print(" stars ");
+    lcd.setCursor(0, 1);
+    lcd.print(catalogueStar.name);
+    lcd.print("        ");
+
+    button = waitForButton();
+
+    if (button == OK_BTN) {
+      // Copy selected star's details across.
+      strcpy(stars[starIndex].name, catalogueStar.name);
+      stars[starIndex].ra = catalogueStar.ra;
+      stars[starIndex].dec = catalogueStar.dec;
+
+      // Move index to next star.
+      starIndex++;
+
+      // If at end of answer, break out of loop.
+      if (starIndex >= ALIGNMENT_STARS) {
+        break;
+      }
+    } else if (button == UP_BTN) {
+      currentStar--;
+
+    } else if (button == DOWN_BTN) {
+      currentStar++;
+    }
+
+    // Prevent currentStar from wrapping the catalogue.
+    if (currentStar < 0) {
+      currentStar = currentStar + ALIGNMENT_STARS;
+    } else if (currentStar >= ALIGNMENT_STARS) {
+      currentStar = currentStar % ALIGNMENT_STARS;
+    }
+  }
 }
 
 /**
