@@ -37,12 +37,6 @@
 #define ALT_SPR 10000
 #define AZ_SPR 10000
 
-// The number of stars in the EEPROM catalogue.
-#define CATALOGUE_STARS 50
-
-// The number of stars to use during alignment - currently immutable.
-#define ALIGNMENT_STARS 2
-
 // Meade serial connection.
 MeadeSerial meade;
 
