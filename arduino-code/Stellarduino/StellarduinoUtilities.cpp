@@ -228,6 +228,8 @@ void lcdChooseCatalogueStars(LiquidCrystal lcd, ObservedStar* stars)
     lcd.print(ALIGNMENT_STARS - starIndex);
     lcd.print(" stars ");
     lcd.setCursor(0, 1);
+    lcd.print(padding((String)(currentStar + 1), 2));
+    lcd.print(" ");
     lcd.print(catalogueStar.name);
     lcd.print("        ");
 
@@ -255,9 +257,9 @@ void lcdChooseCatalogueStars(LiquidCrystal lcd, ObservedStar* stars)
 
     // Prevent currentStar from wrapping the catalogue.
     if (currentStar < 0) {
-      currentStar = currentStar + ALIGNMENT_STARS;
-    } else if (currentStar >= ALIGNMENT_STARS) {
-      currentStar = currentStar % ALIGNMENT_STARS;
+      currentStar = currentStar + CATALOGUE_STARS;
+    } else if (currentStar >= CATALOGUE_STARS) {
+      currentStar = currentStar % CATALOGUE_STARS;
     }
   }
 }
@@ -289,7 +291,7 @@ void lcdChooseCatalogueStars(LiquidCrystal lcd, ObservedStar* stars)
 
 void loadCatalogueStar(uint8_t i, CatalogueStar& star)
 {
-  uint8_t offset = i * TOTAL_LENGTH;
+  uint16_t offset = i * TOTAL_LENGTH;
   loadNameFromEEPROM(offset, star.name);
   loadFloatFromEEPROM(offset + NAME_LENGTH, &star.ra);
   loadFloatFromEEPROM(offset + NAME_LENGTH + FLOAT_LENGTH, &star.dec);
@@ -300,7 +302,7 @@ void loadCatalogueStar(uint8_t i, CatalogueStar& star)
 /**
  * Reads a name (char array) from the EEPROM into the referenced char array.
  */
-void loadNameFromEEPROM(uint8_t offset, char* name)
+void loadNameFromEEPROM(uint16_t offset, char* name)
 {
   for (uint8_t c = 0; c < NAME_LENGTH; c++) {
     name[c] = EEPROM.read(offset + c);
@@ -310,12 +312,15 @@ void loadNameFromEEPROM(uint8_t offset, char* name)
       break;
     }
   }
+
+  // Ensure last character is the null terminator.
+  name[NAME_LENGTH] = '\0';
 }
 
 /**
  * Reads a float value from the EEPROM into the referenced float.
  */
-void loadFloatFromEEPROM(uint8_t offset, float* value)
+void loadFloatFromEEPROM(uint16_t offset, float* value)
 {
   // Make pointer to byte, and make it to point to the first byte of the float.
   byte *p = (byte*)value;

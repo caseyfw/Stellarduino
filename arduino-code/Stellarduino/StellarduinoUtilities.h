@@ -87,8 +87,8 @@ uint8_t waitForButton();
 
 // Star catalogue EEPROM functions.
 void loadCatalogueStar(uint8_t i, CatalogueStar& star);
-void loadNameFromEEPROM(uint8_t offset, char* name);
-void loadFloatFromEEPROM(uint8_t offset, float* value);
+void loadNameFromEEPROM(uint16_t offset, char* name);
+void loadFloatFromEEPROM(uint16_t offset, float* value);
 
 // Coordinate geometry functions.
 float getJulianDate(uint16_t year, uint8_t month, uint8_t day);
