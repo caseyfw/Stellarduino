@@ -149,7 +149,7 @@ void setup()
       // Determine date and time.
       lcdDatePrompt(lcd, initialDate);
       lcdCoordPrompt(lcd, "Enter latitude", &latitude);
-      lcdCoordPrompt(lcd, "Enter longitude", &latitude);
+      lcdCoordPrompt(lcd, "Enter longitude", &longitude);
 
       // Once data is collected, star selection can be performed.
       autoSelectAlignmentStars();
