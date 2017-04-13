@@ -1,53 +1,83 @@
 /**
  * Stellarduino.ino
- * The base Arduino sketch that makes up the heart of Stellarduino
+ * The base Arduino sketch that makes up the heart of Stellarduino.
  *
  * This software is pretty dodgy, but accomplishes PushTo so long as you
  * preselect alignment stars below.
  *
- * Version: 0.3 Meade Autostar
+ * Software Requirements
+ * TLB's Encoder library: http://www.pjrc.com/teensy/td_libs_Encoder.html
+ * Adafruit's RTC library: https://github.com/adafruit/RTClib
+ *
+ * Hardware Requirements
+ * To run this program, you'll need an Arduino Uno or better, a 16x2 LCD,
+ * display, a push button, and a 220k ohm resistor.
+ *
+ * For more information, including a setup guide, head to
+ * www.caseyfulton.com/stellarduino
+ *
+ * Version: 0.4 Better Alignment
  * Author: Casey Fulton, casey AT caseyfulton DOT com
+ * Website: http://www.caseyfulton.com/stellarduino
  * License: MIT, http://opensource.org/licenses/MIT
  */
 
-
+#include <EEPROM.h>
 #include <Encoder.h>
 #include <LiquidCrystal.h>
 #include <math.h>
-//#include <Wire.h>
-//#include "RTClib.h"
-//#include <SoftwareSerial.h>
+#include <Wire.h>
+#include "RTClib.h"
+#include "StellarduinoUtilities.h"
+#include "MeadeSerial.h"
 
-// some types
-typedef struct {
-  float time;
-  float ra;
-  float dec;
-  float alt;
-  float az;
-  String name;
-} Star;
+#define DEBUG false
 
-//RTC_DS1307 RTC;
+// Encoder steps per revolution of scope (typically 4 * CPR * gearing).
+#define ALT_SPR 10000
+#define AZ_SPR 10000
 
-void fillVectorWithT(float* v, float e, float az);
-void fillVectorWithC(float* v, Star star, float initialTime);
-void fillStarWithCVector(float* star, float* v);
+// Meade serial connection.
+MeadeSerial meade;
 
-// solar day (24h00m00s) / sidereal day (23h56m04.0916s)
-const float siderealFraction = 1.002737908;
+// Display.
+// TODO: Make provision for I2C LCD.
+LiquidCrystal lcd(6, 7, 8, 9, 10, 11);
 
-// initial time as radians
+// Encoders.
+Encoder altEncoder(2, 4);
+Encoder azEncoder(3, 5);
+
+// Real Time Clock.
+RTC_DS1307 rtc;
+
+// Real Time Clock date/time object - may come from being manually entered.
+DateTime initialDate;
+
+// Initial time as radians.
 float initialTime;
 
-// alignment stars
-//Star aAnd = {5.619669, 0.034470, 0.506809, 1.732239, 1.463808, "α And"};
-//Star aUmi = {5.659376, 0.618501, 1.557218, 5.427625, 0.611563, "α Umi"};
+// Sidereal time when the sketch started, expressed in radians.
+// TODO: This could replace initialTime, or at least inform it.
+float initialSiderealTime;
 
-Star rigelK = {0.0, 3.837912142664153, -1.0618086768405413, 0.0, 0.0, "Rigel K"};
-Star arcturus = {0.0, 3.733528341608887, 0.33479293562700113, 0.0, 0.0, "Arcturus"};
+// Alignment stars - loaded from EEPROM.
+ObservedStar alignmentStars[2];
 
-// calculation vectors
+// Temp location to put catalogue stars while calculating their suitability.
+CatalogueStar catalogueStar;
+
+// Handy modifiers to convert encoder ticks to radians.
+float altMultiplier;
+float azMultiplier;
+
+// Unprocessed telescope orientation in radians from encoders.
+float altT, azT;
+
+// Viewing coordinates in radians.
+float latitude, longitude;
+
+// Calculation vectors.
 float firstTVector[3];
 float secondTVector[3];
 float thirdTVector[3];
@@ -59,366 +89,275 @@ float thirdCVector[3];
 float obsTVector[3];
 float obsCVector[3];
 
-float obs[2];
-
-// matricies
+// Matricies.
 float telescopeMatrix[9];
 float celestialMatrix[9];
 float inverseMatrix[9];
 float transformMatrix[9];
 float inverseTransformMatrix[9];
 
-// encoders
-Encoder altEncoder(2, 4);
-Encoder azEncoder(3, 5);
-
-// display
-LiquidCrystal lcd(6, 7, 8, 9, 10, 11);
-
-// OMFG Software Serial, need to ditch this in favour of USB port!
-//SoftwareSerial mySerial(13, 12); // RX, TX
-
-// encoder steps per revolution of scope (typically 4 * CPR * gearing)
-const int altSPR = 10000;
-const int azSPR = 10000;
-
-// handy modifiers to convert encoder ticks to radians
-float altMultiplier, azMultiplier, altT, azT;
-
-const float rad2deg = 57.29577951308232;
-
-// buttons
-const int OK_BTN = A0;
+// Final observed star coordinates [ra, dec] in radians.
+float obs[2];
 
 void setup()
 {
-  //mySerial.begin(9600);
-  Serial.begin(9600);
+  // Calculate encoder multipliers based on steps per revolution.
+  altMultiplier = 2.0 * M_PI / (float)ALT_SPR;
+  azMultiplier = -2.0 * M_PI / (float)AZ_SPR;
+
+  // Set initial datetime object.
+  if (rtc.begin() && rtc.isrunning()) {
+    initialDate = rtc.now();
+  }
+
+  // Attempt to fetch viewing location from EEPROM.
+  loadFloatFromEEPROM(LAT_ADDR, &latitude);
+  loadFloatFromEEPROM(LONG_ADDR, &longitude);
+
   lcd.begin(16, 2);
   lcd.clear();
   pinMode(OK_BTN, INPUT);
+  pinMode(UP_BTN, INPUT);
+  pinMode(DOWN_BTN, INPUT);
 
-  // setup encoders
-  altMultiplier = 2.0 * M_PI / ((float)altSPR);
-  azMultiplier = -2.0 * M_PI / ((float)azSPR);
-  
+  if (DEBUG) {
+    Serial.begin(9600);
+    delay(5000);
+  }
+
+  const char starSelectionOptions[][10] = {"Auto", "Semi-auto", "Manually"};
+
+  switch (lcdChoose(lcd, "Star selection?", starSelectionOptions, 3)) {
+    // Automatic alignment star selection.
+    case 0:
+      // Check if RTC is working and viewing coordinates make sense.
+      if (rtc.isrunning() &&
+        latitude >= M_PI * -0.5 && latitude <= M_PI * 0.5 &&
+        longitude >= M_PI * -1.0 && longitude <= M_PI ) {
+        autoSelectAlignmentStars();
+      } else {
+        lcd.clear();
+        lcd.print("Error: date or");
+        lcd.setCursor(0,1);
+        lcd.print("coords not set.");
+        die();
+      }
+      break;
+
+    // Semi-automatic alignment star selection.
+    case 1:
+      // Determine date and time.
+      lcdDatePrompt(lcd, initialDate);
+      lcdCoordPrompt(lcd, "Enter latitude", &latitude);
+      lcdCoordPrompt(lcd, "Enter longitude", &longitude);
+
+      // Once data is collected, star selection can be performed.
+      autoSelectAlignmentStars();
+      break;
+
+    // Manual alignment star selection.
+    case 2:
+      lcdChooseCatalogueStars(lcd, alignmentStars);
+      break;
+  }
+
+  lcd.clear();
+  lcd.print("Star 1: ");
+  lcd.print(alignmentStars[0].name);
+  lcd.setCursor(0,1);
+  lcd.print("Star 2: ");
+  lcd.print(alignmentStars[1].name);
+  delay(5000);
+
   doAlignment();
-  
+
   calculateTransforms();
-  
-/*  Serial.println("Telescope matrix:");
-  printMatrix(telescopeMatrix);
 
-  Serial.println("Celestial matrix:");
-  printMatrix(celestialMatrix);
+  clearScreen();
+  meade.begin(obs, false, 9600);
+}
 
-  Serial.println("Inverse Celestial matrix:");
-  printMatrix(inverseMatrix);
-  
-  Serial.println("Transform matrix:");
-  printMatrix(transformMatrix); 
+void loop()
+{
+  // Read encoder values.
+  altT = altMultiplier * altEncoder.read();
+  azT = azMultiplier * azEncoder.read();
 
-  Serial.println("Inverse Transform matrix:");
-  printMatrix(inverseTransformMatrix); */
-  
+  // Use transformation matrix to convert to RA/Dec.
+  fillVectorWithT(obsTVector, altT, azT);
+  fillMatrixWithProduct(obsCVector, inverseTransformMatrix, obsTVector,
+    3, 3, 1);
+  fillStarWithCVector(obs, obsCVector, initialTime);
+
+  // Refresh LCD.
+  lcd.setCursor(5,0);
+  lcd.print(rad2hms(obs[0]));
+  lcd.print(" ");
+  lcd.setCursor(5,1);
+  lcd.print(rad2dms(obs[1]));
+  lcd.print(" ");
+
+  // If there's a serial request waiting, process it.
+  if (Serial.available()) {
+    meade.processSerial();
+  }
+}
+
+/**
+ * Selects alignment stars for the user from the EEPROM star catalogue based on
+ * viewing coordinates and time.
+ */
+void autoSelectAlignmentStars()
+{
+  // Hours, minutes and seconds in decimal since program started running.
+  float hour = initialDate.hour() + initialDate.minute() / 60.0 +
+    initialDate.second() / 3600.0;
+
+  // Calculate approximate current Julian day.
+  float julianDate = getJulianDate(initialDate.year(), initialDate.month(),
+    initialDate.day());
+
+  // Calculate initial local sidereal time.
+  initialSiderealTime = getSiderealTime(julianDate, hour, longitude);
+
+  // Alignment star counter.
+  uint8_t n = 0;
+  for (uint8_t i = 0; i < CATALOGUE_STARS; i++) {
+    loadCatalogueStar(i, catalogueStar);
+
+    celestialToEquatorial(
+      catalogueStar.ra,
+      catalogueStar.dec,
+      latitude,
+      longitude,
+      initialSiderealTime + (float)millis() / 13713441.095,
+      obs
+    );
+    // TODO: Figure out the milliRadsPerSiderealDay issue.
+
+    // If catalogue star is higher than 25 degrees above the horizon.
+    if (obs[0] > 0.436332313) {
+      // Copy catalogue star to alignment star.
+      strcpy(alignmentStars[n].name, catalogueStar.name);
+      alignmentStars[n].ra = catalogueStar.ra;
+      alignmentStars[n].dec = catalogueStar.dec;
+      alignmentStars[n].alt = obs[0];
+      alignmentStars[n].az = obs[1];
+      n++;
+
+      // If both alignment stars have been selected, return.
+      if (n >= ALIGNMENT_STARS) {
+        return;
+      }
+    }
+  }
+
+  // If we get to here, insufficient alignment stars have been selected. Error!
+  lcd.clear();
+  lcd.print("Insuff. alignmnt");
+  lcd.setCursor(0, 1);
+  lcd.print("stars visible.");
+  die();
+}
+
+void doAlignment() {
+  // Set initial time - actual time not necessary, just the difference!
+  initialTime = (float)millis() / 86400000.0f * 2.0 * M_PI;
+
+  // Ask user to point scope at first star.
+  lcd.clear();
+  lcd.print("Point: ");
+  lcd.print(alignmentStars[0].name);
+  lcd.setCursor(0,1);
+  lcd.print("Then press OK");
+
+  // Wait for button press.
+  while(digitalRead(OK_BTN) == LOW);
+  alignmentStars[0].time = (float)millis() / 86400000.0f * 2.0 * M_PI;
+  alignmentStars[0].alt = altMultiplier * altEncoder.read();
+  alignmentStars[0].az = azMultiplier * azEncoder.read();
+
+  lcd.clear();
+  lcd.print("Alt set: ");
+  lcd.print(alignmentStars[0].alt * rad2deg, 3);
+  lcd.setCursor(0,1);
+  lcd.print("Az set: ");
+  lcd.print(alignmentStars[0].az * rad2deg, 3);
+
+  delay(2000);
+
+  // Ask user to point scope at second star.
+  lcd.clear();
+  lcd.print("Point: ");
+  lcd.print(alignmentStars[1].name);
+  lcd.setCursor(0,1);
+  lcd.print("Then press OK");
+
+  // Wait for button press.
+  while(digitalRead(OK_BTN) == LOW);
+  alignmentStars[1].time = (float)millis() / 86400000.0f * 2.0 * M_PI;
+  alignmentStars[1].az = azMultiplier * azEncoder.read();
+  alignmentStars[1].alt = altMultiplier * altEncoder.read();
+
+  lcd.clear();
+  lcd.print("Alt set: ");
+  lcd.print(alignmentStars[1].alt * rad2deg, 3);
+  lcd.setCursor(0,1);
+  lcd.print("Az set: ");
+  lcd.print(alignmentStars[1].az * rad2deg, 3);
+
+  delay(2000);
+}
+
+void calculateTransforms() {
+  // Calculate vectors for alignment stars.
+  fillVectorWithT(firstTVector, alignmentStars[0].alt, alignmentStars[0].az);
+  fillVectorWithT(secondTVector, alignmentStars[1].alt, alignmentStars[1].az);
+
+  // Calculate third's vectors.
+  fillVectorWithProduct(thirdTVector, firstTVector, secondTVector);
+
+  // Calculate celestial vectors for alignment stars.
+  fillVectorWithC(firstCVector, alignmentStars[0], initialTime);
+  fillVectorWithC(secondCVector, alignmentStars[1], initialTime);
+
+  // Calculate third's vector.
+  fillVectorWithProduct(thirdCVector, firstCVector, secondCVector);
+
+  fillMatrixWithVectors(telescopeMatrix, firstTVector, secondTVector,
+    thirdTVector);
+  fillMatrixWithVectors(celestialMatrix, firstCVector, secondCVector,
+    thirdCVector);
+
+  copyMatrix(inverseMatrix, celestialMatrix);
+  invertMatrix(inverseMatrix);
+
+  fillMatrixWithProduct(transformMatrix, telescopeMatrix, inverseMatrix,
+    3, 3, 3);
+  copyMatrix(inverseTransformMatrix, transformMatrix);
+  invertMatrix(inverseTransformMatrix);
+}
+
+void clearScreen()
+{
   lcd.clear();
   lcd.print("RA: ");
   lcd.setCursor(0, 1);
   lcd.print("Dec:  ");
 }
 
-void loop()
+void printMatrix(float* m)
 {
-  altT = altMultiplier * altEncoder.read();
-  azT = azMultiplier * azEncoder.read();
-  
-  fillVectorWithT(obsTVector, altT, azT);
-  fillMatrixWithProduct(obsCVector, inverseTransformMatrix, obsTVector, 3, 3, 1);
-  fillStarWithCVector(obs, obsCVector); // OMFG THIS IS PROBABLY INCORRECT
+  // Apparently I deleted the print matrix function, so I'm adding this back in
+  // so debug doesn't die.
 
-
-/*
-  Serial.println("Observed vector:");
-  printVector(obsTVector);
-  Serial.println("Transformed celestial vector:");
-  printVector(obsCVector);
-  Serial.println("Celestial coordinates:");
-  Serial.print(obs[0]);
-  Serial.print(",");
-  Serial.println(obs[1]);
-
-  while(Serial.available() == 0)
-  {
-    // do nothing
-  }
-  Serial.read();
-*/
-
-  lcd.setCursor(5,0);
-//  lcd.print(obs[0] * rad2deg, 3);
-  lcd.print(rad2hm(obs[0]));
-  lcd.print(" ");
-  lcd.setCursor(5,1);
-//  lcd.print(obs[1] * rad2deg, 3);
-  lcd.print(rad2dm(obs[1]));
-  lcd.print(" ");
-  
-  // if there's a serial request waiting, process it
-  if (Serial.available()) {
-    processSerialMessage(obs);
-  }
+  // TODO: rewrite printMatrix.
 }
 
-void fillVectorWithT(float* v, float e, float az) {
-  v[0] = cos(e) * cos(az);
-  v[1] = cos(e) * sin(az);
-  v[2] = sin(e);
-}
-
-void fillVectorWithC(float* v, Star star, float initialTime) {
-  v[0] = cos(star.dec) * cos(star.ra - siderealFraction * (star.time - initialTime));
-  v[1] = cos(star.dec) * sin(star.ra - siderealFraction * (star.time - initialTime));
-  v[2] = sin(star.dec);
-}
-
-void fillStarWithCVector(float* star, float* v)
+void printVector(float* v)
 {
-  // OMFG THIS IS PROBABLY INCORRECT
-  star[0] = atan(v[1] / v[0]) + siderealFraction * ((float)millis() / 86400000.0f * 2.0 * M_PI - initialTime);
-  if(v[0] < 0) star[0] = star[0] + M_PI;
-  star[1] = asin(v[2]);
+  // Apparently I deleted the print vector function, so I'm adding this back in
+  // so debug doesn't die.
+
+  // TODO: rewrite printVector.
 }
-
-void fillVectorWithProduct(float* v, float* a, float* b) {
-  float multiplier = 1 / sqrt(
-    pow(a[1] * b[2] - a[2] * b[1], 2) +
-    pow(a[2] * b[0] - a[0] * b[2], 2) +
-    pow(a[0] * b[1] - a[1] * b[0], 2)
-  );
-  v[0] = multiplier * (a[1] * b[2] - a[2] * b[1]);
-  v[1] = multiplier * (a[2] * b[0] - a[0] * b[2]);
-  v[2] = multiplier * (a[0] * b[1] - a[1] * b[0]);
-}
-
-void fillMatrixWithVectors(float* m, float* a, float* b, float* c)
-{
-  m[0] = a[0];
-  m[1] = b[0];
-  m[2] = c[0];
-  m[3] = a[1];
-  m[4] = b[1];
-  m[5] = c[1];
-  m[6] = a[2];
-  m[7] = b[2];
-  m[8] = c[2];
-}
-
-void invertMatrix(float* m) {
-  float temp;
-  int pivrow;
-  int pivrows[9];
-  int i,j,k;
-  
-  for(k = 0; k < 3; k++) {
-    temp = 0;
-    for(i = k; i < 3; i++) {
-      if(abs(m[i * 3 + k]) >= temp) {
-        temp = abs(m[i * 3 + k]);
-        pivrow = i;
-      }
-    }
-    // should do something here... if(m[pivrow * 3 + k] == 0.0) "singular matrix"
-    if(pivrow != k) {
-      for(j = 0; j < 3; j++) {
-        temp = m[k * 3 + j];
-        m[k * 3 + j] = m[pivrow * 3 + j];
-        m[pivrow * 3 + j] = temp;
-      }
-    }
-
-    //record pivot row swap
-    pivrows[k] = pivrow;
-
-    temp = 1.0 / m[k * 3 + k];
-    m[k * 3 + k] = 1.0;
-
-    // row reduction
-    for(j = 0; j < 3; j++) {
-      m[k * 3 + j] = m[k * 3 + j] * temp;
-    }
-    
-    for(i = 0; i < 3; i++) {
-      if(i != k) {
-        temp = m[i* 3 + k];
-        m[i * 3 + k] = 0.0;
-        for(j = 0; j < 3; j++) {
-          m[i * 3 + j] = m[i * 3 + j] - m[k * 3 + j] * temp;
-        }
-      }
-    }
-  }
-  
-  for(k = 2; k >= 0; k--) {
-    if(pivrows[k] != k) {
-      for(i = 0; i < 3; i++) {
-        temp = m[i * 3 + k];
-        m[i * 3 + k] = m[i * 3 + pivrows[k]];
-        m[i * 3 + pivrows[k]] = temp;
-      }
-    }
-  }
-}
-
-void fillMatrixWithProduct(float* m, float* a, float* b, int aRows, int aCols, int bCols)
-{
-  for(int i = 0; i < aRows; i++) {
-    for(int j = 0; j < bCols; j++) {
-      m[bCols * i + j] = 0;
-      for(int k = 0; k < aCols; k++) {
-        m[bCols * i + j] = m[bCols * i + j] + a[aCols * i + k] * b[bCols * k + j];
-      }
-    }
-  }
-}
-
-void copyMatrix(float* recipient, float* donor)
-{
-  for(int i = 0; i < 9; i++) {
-    recipient[i] = donor[i];
-  }
-}
-
-void doAlignment() {
-  // set initial time - actual time not necessary, just the difference!
-  initialTime = (float)millis() / 86400000.0f * 2.0 * M_PI;
-  
-  // ask user to point scope at first star
-  lcd.print("Point: ");
-  lcd.print(rigelK.name);
-  lcd.setCursor(0,1);
-  lcd.print("Then press OK");
-
-  // wait for button press
-  while(digitalRead(OK_BTN) == LOW);
-  rigelK.time = (float)millis() / 86400000.0f * 2.0 * M_PI;
-  rigelK.alt = altMultiplier * altEncoder.read();
-  rigelK.az = azMultiplier * azEncoder.read();
-
-  lcd.clear();
-  lcd.print("Alt set: ");
-  lcd.print(rigelK.alt * rad2deg, 3);
-  lcd.setCursor(0,1);
-  lcd.print("Az set: ");
-  lcd.print(rigelK.az * rad2deg, 3);
-
-  delay(2000);
-
-  // ask user to point scope at second star
-  lcd.clear();
-  lcd.print("Point: ");
-  lcd.print(arcturus.name);
-  lcd.setCursor(0,1);
-  lcd.print("Then press OK");
-  
-  // wait for button press
-  while(digitalRead(OK_BTN) == LOW);
-  arcturus.time = (float)millis() / 86400000.0f * 2.0 * M_PI;
-  arcturus.az = azMultiplier * azEncoder.read();
-  arcturus.alt = altMultiplier * altEncoder.read();
-
-  lcd.clear();
-  lcd.print("Alt set: ");
-  lcd.print(arcturus.alt * rad2deg, 3);
-  lcd.setCursor(0,1);
-  lcd.print("Az set: ");
-  lcd.print(arcturus.az * rad2deg, 3);
-
-  delay(2000);
-}
-
-void calculateTransforms() {
-  // calculate vectors for aAnd and aUmi
-  fillVectorWithT(firstTVector, rigelK.alt, rigelK.az);
-  fillVectorWithT(secondTVector, arcturus.alt, arcturus.az);
-  
-  // calculate third's vectors
-  fillVectorWithProduct(thirdTVector, firstTVector, secondTVector);
-
-  // calculate celestial vectors for aAnd and aUmi
-  fillVectorWithC(firstCVector, rigelK, initialTime);
-  fillVectorWithC(secondCVector, arcturus, initialTime);
-  
-  // calculate third's vector
-  fillVectorWithProduct(thirdCVector, firstCVector, secondCVector);
-  
-  fillMatrixWithVectors(telescopeMatrix, firstTVector, secondTVector, thirdTVector);
-  fillMatrixWithVectors(celestialMatrix, firstCVector, secondCVector, thirdCVector);  
-  
-  copyMatrix(inverseMatrix, celestialMatrix);
-  invertMatrix(inverseMatrix);
-  
-  fillMatrixWithProduct(transformMatrix, telescopeMatrix, inverseMatrix, 3, 3, 3);
-  copyMatrix(inverseTransformMatrix, transformMatrix);
-  invertMatrix(inverseTransformMatrix);
-}
-
-void processSerialMessage(float* star) {
-  String request;
-  String response;
-  delay(10); // chill for a bit to wait for the buffer to fill
-
-  while(Serial.available()) {
-    request += (char)Serial.read();
-  }
-  
-  request.trim();
-  
-  /*
-  Serial.print("Received request: '");
-  Serial.print(request);
-  Serial.println("'");
-
-  Serial.print("Request length: '");
-  Serial.print(sizeof(request));
-  Serial.println("'");
-  */
-  
-  if (request == "#:GR#") response = rad2hm(star[0]);
-  if (request == ":GR#") response = rad2hm(star[0]);
-  if (request == "#:U##:GR#") response = rad2hm(star[0]);
-  if (request == "#:GD#") response = rad2dm(star[1]);
-  if (request == ":GD#") response = rad2dm(star[1]);
-  if (request == "#:U##:GD#") response = rad2dm(star[1]);
-  
-  Serial.print(response + "#");
-  
-  /*
-  Serial.print("Responded with: '");
-  Serial.print(response);
-  Serial.println("'");
-  */
-}
-
-String rad2hm(float rad) {
-  if (rad < 0) rad = rad + 2.0 * M_PI;
-  float hours = rad * 24.0 / (2.0 * M_PI);
-  float minutes = (hours - floor(hours)) * 60.0;
-  float minfrac = (minutes - floor(minutes)) * 10.0;
-  return padding((String)int(floor(hours)), 2) + ":" + padding((String)int(floor(minutes)), 2) + "." + (String)int(floor(minfrac));
-}
-
-String rad2dm(float rad) {
-  float degs = abs(rad) * 360.0 / (2.0 * M_PI);
-  float minutes = (degs - floor(degs)) * 60.0;
-  String sign = "+";
-  if (rad < 0) sign = "-";
-  return sign + padding((String)int(floor(degs)), 2) + "*" + padding((String)int(floor(minutes)), 2);
-}
-
-String padding(String str, int length) {
-  while(str.length() < length) {
-    str = "0" + str;
-  }
-  return str;
-}
-    
