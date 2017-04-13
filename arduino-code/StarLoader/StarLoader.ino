@@ -1,7 +1,7 @@
 /**
  * StarLoader.ino
- * This sketch uploads a catalogue of the 50 brightest stars to an Arduino's
- * EEPROM.
+ * This sketch uploads a catalogue of the 50 brightest stars and (optionally)
+ * your local viewing latitude and longitude to an Arduino's EEPROM.
  *
  * WARNING: EEPROM is not like regular flash memory, it has a limited life span,
  * and will actually "wear out" after ~100,000 erase/write cycles. There is no
@@ -32,7 +32,7 @@
  * provide automatic alignment star selection, based on their visibility and
  * apparent magnitude.
  *
- * Version: 0.4 Better Alignment
+ * Version: 0.5 Added Lat/Long loading.
  * Author: Casey Fulton, casey AT caseyfulton DOT com
  * Website: http://www.caseyfulton.com/stellarduino
  * License: MIT, http://opensource.org/licenses/MIT
@@ -44,6 +44,9 @@
 #define NAME_LENGTH 8 // 8 bytes per star.
 #define TOTAL_LENGTH 20 // 20 bytes per star total.
 #define NUM_OF_STARS 50 // 20 x 50 = 1000 bytes, ~ the size of the Uno EEPROM.
+#define LAT_OFFSET 1000
+#define LONG_OFFSET 1004
+
 
 struct CatalogueStar
 {
@@ -52,6 +55,15 @@ struct CatalogueStar
   float dec;  // Declination.
   float vmag; // Apparent magnitude.
 };
+
+// Your local viewing location expressed in radians.
+// Find your coordinates in decimal degrees: http://en.mygeoposition.com/
+// Convert those numbers to radians: https://google.com/search?q=deg%20to%20rad
+// Example: Siding Springs Observatory in NSW, Australia.
+// Lat:  -31.2749450 -> -0.545850763629
+// Long: 149.0684590 ->  2.601735420418
+float latitude = -0.545850763629; // CHANGE ME.
+float longitude = 2.601735420418; // CHANGE ME.
 
 CatalogueStar stars[] = {
   { "Sirius",    1.76779309390854,  -0.291751177018097, -1.46 },
@@ -168,6 +180,14 @@ void setup()
 
     delay(200);
   }
+
+  Serial.print("Writing latitude ");
+  Serial.println(latitude, 4);
+  writeFloat(LAT_OFFSET, latitude);
+
+  Serial.print("Writing longitude ");
+  Serial.println(longitude, 4);
+  writeFloat(LAT_OFFSET, longitude);
 
   Serial.print("Upload succeeded!");
 }

@@ -3,7 +3,7 @@
  * This sketch displays the contents of an Arduino's EEPROM assuming it has
  * been modified by StarLoader.ino.
  *
- * Version: 0.4 Better Alignment
+ * Version: 0.5 Added Lat/Long checking.
  * Author: Casey Fulton, casey AT caseyfulton DOT com
  * Website: http://www.caseyfulton.com/stellarduino
  * License: MIT, http://opensource.org/licenses/MIT
@@ -16,6 +16,8 @@
 #define NAME_LENGTH 8 // 8 bytes per star.
 #define TOTAL_LENGTH 20 // 20 bytes per star total.
 #define NUM_OF_STARS 50 // 20 x 50 = 1000 bytes, ~ the size of the Uno EEPROM.
+#define LAT_OFFSET 1000
+#define LONG_OFFSET 1004
 
 struct CatalogueStar
 {
@@ -128,6 +130,12 @@ void setup()
     }
     Serial.println(star.vmag);
   }
+
+  Serial.println("Stored viewing location");
+  Serial.print("Latitude ");
+  Serial.println(rad2dms(readFloat(LAT_OFFSET)));
+  Serial.print("Longitude ");
+  Serial.println(rad2dms(readFloat(LONG_OFFSET)));
 
   Serial.println("### Finished.");
 }
